@@ -3,93 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Scan App</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    
+    <title>Sistem Inventori</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
 
-    <div class="app-header">
-        <h1>Scanner Inventory</h1>
+    <div class="navbar">
+        <div class="brand">MY INVENTORY</div>
+        <div style="font-size:12px; color:#666;">v2.0</div>
     </div>
 
-    <div class="scanner-wrapper">
+    <div class="menu-toggle">
+        <button class="menu-btn active" onclick="setMode('scan')">Scan Biasa</button>
+        <button class="menu-btn" onclick="setMode('master')">Input Master</button>
+    </div>
+
+    <div style="padding: 10px; width:100%; display:flex; justify-content:center;">
         <div id="reader"></div>
     </div>
 
-    <div class="status-card">
-        <div class="status-title">STATUS</div>
-        <div id="result" class="status-text">Siap Scan...</div>
+    <div id="form-master-panel" class="form-master">
+        <h3 style="margin-top:0;">Input Data Barang Baru</h3>
+        
+        <div class="form-group">
+            <label class="form-label">ID Barcode (Scan Otomatis)</label>
+            <input type="text" id="inp_barcode" class="form-input" placeholder="Scan barang..." readonly style="background:#e9ecef;">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Nama Barang</label>
+            <input type="text" id="inp_nama" class="form-input" placeholder="Contoh: Kampas Rem Vario">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Satuan</label>
+            <select id="inp_satuan" class="form-input">
+                <option value="PCS">PCS</option>
+                <option value="SET">SET</option>
+                <option value="BOX">BOX</option>
+                <option value="UNIT">UNIT</option>
+                <option value="LITER">LITER</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Keterangan / Lokasi Rak</label>
+            <input type="text" id="inp_ket" class="form-input" placeholder="Contoh: Rak A-1">
+        </div>
+
+        <button class="btn-save" onclick="simpanMaster()">SIMPAN DATA</button>
     </div>
 
+    <div id="status-msg">Siap Scan...</div>
+
     <script>
-        // --- CONFIG ---
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwCJLPFpjknY1UUKje86ZBhgKdexVSXwUs1tvV-NEhorxeqTE2Y3X3uJD5Lfa4u4B5W_w/exec";
+        // --- GANTI URL INI DENGAN YANG BARU ---
+        const API_URL = "URL_APPS_SCRIPT_ANDA_DISINI";
+
+        let currentMode = 'scan'; // 'scan' atau 'master'
+        let html5QrcodeScanner;
+
+        function setMode(mode) {
+            currentMode = mode;
+            // Update UI Tombol
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Tampilkan/Sembunyikan Form
+            if(mode === 'master') {
+                document.getElementById('form-master-panel').style.display = 'block';
+                showToast("Mode Input Master: Silakan Scan Barang");
+            } else {
+                document.getElementById('form-master-panel').style.display = 'none';
+                showToast("Mode Scan Biasa Aktif");
+            }
+        }
 
         function onScanSuccess(decodedText, decodedResult) {
-            html5QrcodeScanner.clear();
-            
-            // Update UI: Loading
-            const resultEl = document.getElementById('result');
-            resultEl.innerText = `Mengirim: ${decodedText}...`;
-            resultEl.className = "status-text loading-pulse";
+            // Bunyi Beep
+            if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(200);
 
-            // Kirim Data
-            fetch(GOOGLE_SCRIPT_URL, {
+            if (currentMode === 'scan') {
+                // LOGIKA SCAN BIASA
+                html5QrcodeScanner.pause(); // Pause sebentar
+                kirimData({ action: 'scan_biasa', barcode: decodedText });
+            } 
+            else if (currentMode === 'master') {
+                // LOGIKA INPUT MASTER
+                // Isi otomatis kolom barcode, tapi JANGAN kirim dulu
+                document.getElementById('inp_barcode').value = decodedText;
+                showToast("Barcode Terbaca! Silakan isi detail.");
+                html5QrcodeScanner.pause(); // Pause biar user bisa ngetik tenang
+                
+                // Scroll ke form
+                document.getElementById('form-master-panel').scrollIntoView({behavior: "smooth"});
+            }
+        }
+
+        function simpanMaster() {
+            const barcode = document.getElementById('inp_barcode').value;
+            const nama = document.getElementById('inp_nama').value;
+            const satuan = document.getElementById('inp_satuan').value;
+            const ket = document.getElementById('inp_ket').value;
+
+            if(!barcode || !nama) {
+                alert("Barcode dan Nama Barang wajib diisi!");
+                return;
+            }
+
+            const payload = {
+                action: 'input_master',
+                barcode: barcode,
+                nama: nama,
+                satuan: satuan,
+                keterangan: ket
+            };
+
+            kirimData(payload);
+        }
+
+        function kirimData(jsonData) {
+            showToast("Mengirim data...", true);
+
+            fetch(API_URL, {
                 method: "POST",
                 mode: "no-cors",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ barcode: decodedText })
-            })
-            .then(() => {
-                // Update UI: Sukses
-                resultEl.innerText = `✅ SUKSES: ${decodedText}`;
-                resultEl.classList.remove("loading-pulse");
-                resultEl.classList.add("status-success");
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify(jsonData)
+            }).then(() => {
+                showToast("✅ Berhasil!", true);
                 
-                if (window.navigator && window.navigator.vibrate) {
-                    window.navigator.vibrate(200); 
+                if (currentMode === 'master') {
+                    // Reset Form jika input master sukses
+                    document.getElementById('inp_barcode').value = "";
+                    document.getElementById('inp_nama').value = "";
+                    document.getElementById('inp_ket').value = "";
+                    html5QrcodeScanner.resume(); // Nyalakan kamera lagi
+                } else {
+                    setTimeout(() => { html5QrcodeScanner.resume(); }, 1500);
                 }
-
-                // Restart Scanner
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            })
-            .catch(error => {
-                resultEl.innerText = "❌ Gagal Mengirim";
-                resultEl.classList.add("status-error");
+            }).catch(err => {
+                showToast("❌ Gagal Kirim");
+                console.error(err);
+                html5QrcodeScanner.resume();
             });
         }
 
-        function onScanFailure(error) {}
+        function showToast(text, persistent = false) {
+            const el = document.getElementById('status-msg');
+            el.innerText = text;
+            el.classList.add('show-toast');
+            if(!persistent) {
+                setTimeout(() => el.classList.remove('show-toast'), 3000);
+            }
+        }
 
-        const formatsToSupport = [
-            Html5QrcodeSupportedFormats.PDF_417,
-            Html5QrcodeSupportedFormats.QR_CODE,
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.UPC_A, 
-            Html5QrcodeSupportedFormats.CODE_39
-        ];
-
-        let html5QrcodeScanner = new Html5QrcodeScanner(
+        // Init Scanner
+        html5QrcodeScanner = new Html5QrcodeScanner(
             "reader", 
-            { 
-                fps: 25, 
-                qrbox: {width: 250, height: 200},
-                formatsToSupport: formatsToSupport,
-                experimentalFeatures: { useBarCodeDetectorIfSupported: true }
-            },
+            { fps: 20, qrbox: {width: 250, height: 250}, experimentalFeatures: { useBarCodeDetectorIfSupported: true } },
             false
         );
-        
-        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-    </script>
+        html5QrcodeScanner.render(onScanSuccess, (err)=>{});
 
+    </script>
 </body>
 </html>
