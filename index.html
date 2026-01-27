@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Scanner (QR + Barcode)</title>
+    <title>Scanner PDF417 & Universal</title>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
         body { font-family: sans-serif; padding: 20px; text-align: center; }
         #reader { 
             width: 100%; 
-            max-width: 500px; 
+            max-width: 600px; /* Diperlebar sedikit */
             margin: 0 auto; 
             border: 2px solid #ccc;
             border-radius: 8px;
@@ -26,12 +26,12 @@
 </head>
 <body>
 
-    <h2>Scan QR & Barcode</h2>
+    <h2>Scan PDF417 (Part Honda) & QR</h2>
     <div id="reader"></div>
     <div id="result">Siap scan...</div>
 
     <script>
-        // --- KONFIGURASI URL APPS SCRIPT ---
+        // --- URL APPS SCRIPT ANDA ---
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwCJLPFpjknY1UUKje86ZBhgKdexVSXwUs1tvV-NEhorxeqTE2Y3X3uJD5Lfa4u4B5W_w/exec";
 
         function onScanSuccess(decodedText, decodedResult) {
@@ -47,7 +47,7 @@
                 body: JSON.stringify({ barcode: decodedText })
             })
             .then(() => {
-                document.getElementById('result').innerText = `SUKSES! Data "${decodedText}" tersimpan.`;
+                document.getElementById('result').innerText = `SUKSES! Data tersimpan.`;
                 document.getElementById('result').style.color = "green";
                 setTimeout(() => { location.reload(); }, 1500);
             })
@@ -59,26 +59,24 @@
 
         function onScanFailure(error) {}
 
-        // --- DAFTAR FORMAT LENGKAP ---
+        // --- UPDATE DAFTAR FORMAT ---
         const formatsToSupport = [
-            Html5QrcodeSupportedFormats.QR_CODE,    // QR Code (Prioritas)
-            Html5QrcodeSupportedFormats.CODE_128,   // Resi
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.EAN_13,     // Produk
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E,
-            Html5QrcodeSupportedFormats.ITF
+            Html5QrcodeSupportedFormats.PDF_417,    // <--- KHUSUS UTK LABEL HONDA/KTP/SIM
+            Html5QrcodeSupportedFormats.QR_CODE,    
+            Html5QrcodeSupportedFormats.CODE_128,   
+            Html5QrcodeSupportedFormats.EAN_13,     
+            Html5QrcodeSupportedFormats.UPC_A,      
+            Html5QrcodeSupportedFormats.CODE_39     
         ];
 
         let html5QrcodeScanner = new Html5QrcodeScanner(
             "reader", 
             { 
                 fps: 25, 
-                // KEMBALI KE KOTAK 250x250 (Penting untuk QR Code)
-                qrbox: {width: 250, height: 250}, 
+                // Area scan saya ubah jadi PERSEGI PANJANG (350x200) 
+                // agar pas dengan bentuk barcode PDF417 yang panjang.
+                qrbox: {width: 350, height: 200}, 
                 formatsToSupport: formatsToSupport,
-                // WAJIB AKTIFKAN INI UNTUK QR CODE YANG SUSAH DIBACA
                 experimentalFeatures: {
                     useBarCodeDetectorIfSupported: true
                 }
