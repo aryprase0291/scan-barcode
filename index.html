@@ -20,9 +20,12 @@
         <button class="menu-btn" onclick="setMode('master')">Input Master</button>
     </div>
 
-    <div style="padding: 10px; width:100%; display:flex; justify-content:center;">
-        <div id="reader"></div>
-    </div>
+    <div class="scanner-container">
+    <div id="reader"></div>
+    
+    <div id="success-anim" class="scan-overlay">
+        <div class="success-icon">✅</div> </div>
+</div>
 
     <div id="form-master-panel" class="form-master">
         <h3 style="margin-top:0;">Input Data Barang Baru</h3>
@@ -133,21 +136,41 @@
                 headers: { "Content-Type": "text/plain" },
                 body: JSON.stringify(jsonData)
             }).then(() => {
+                // 1. Update Toast
                 showToast("✅ Berhasil!", true);
                 
-                if (currentMode === 'master') {
-                    // Reset Form jika input master sukses
-                    document.getElementById('inp_barcode').value = "";
-                    document.getElementById('inp_nama').value = "";
-                    document.getElementById('inp_ket').value = "";
-                    html5QrcodeScanner.resume(); // Nyalakan kamera lagi
-                } else {
-                    setTimeout(() => { html5QrcodeScanner.resume(); }, 1500);
+                // 2. Mainkan Efek Getar (Haptic) - Pola: Getar pendek 2x
+                if (window.navigator && window.navigator.vibrate) {
+                    window.navigator.vibrate([100, 50, 100]); 
                 }
+
+                // 3. TAMPILKAN ANIMASI LAYAR
+                const overlay = document.getElementById('success-anim');
+                overlay.classList.add('active');
+
+                // 4. Timer untuk Refresh Kamera
+                setTimeout(() => {
+                    // Hilangkan animasi
+                    overlay.classList.remove('active');
+                    
+                    if (currentMode === 'master') {
+                        // Reset Form Master
+                        document.getElementById('inp_barcode').value = "";
+                        document.getElementById('inp_nama').value = "";
+                        document.getElementById('inp_ket').value = "";
+                        html5QrcodeScanner.resume(); 
+                    } else {
+                        // MODE SCAN BIASA: Refresh Kamera (Resume)
+                        html5QrcodeScanner.resume(); 
+                        showToast("Siap Scan Berikutnya...");
+                    }
+                }, 1500); // Animasi tampil selama 1.5 detik
+
             }).catch(err => {
                 showToast("❌ Gagal Kirim");
                 console.error(err);
-                html5QrcodeScanner.resume();
+                // Jika gagal, tetap nyalakan kamera biar bisa coba lagi
+                setTimeout(() => { html5QrcodeScanner.resume(); }, 1000);
             });
         }
 

@@ -1,85 +1,44 @@
-:root {
-    --primary: #0056D2; /* Biru BCA/Facebook yang tegas */
-    --accent: #FFD700;
-    --bg-body: #F4F6F8; /* Abu muda sejuk */
-    --text-main: #1C1E21; /* Hitam pekat (bukan abu-abu) */
-    --text-sec: #606770;
-    --white: #FFFFFF;
-}
+/* --- TAMBAHAN: ANIMASI SUKSES --- */
 
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--bg-body);
-    color: var(--text-main);
-    margin: 0; padding: 0;
-    display: flex; flex-direction: column; align-items: center;
-}
-
-/* Header Navbar */
-.navbar {
+/* Wrapper agar overlay bisa menumpuk di atas kamera */
+.scanner-container {
+    position: relative;
     width: 100%;
-    background: var(--white);
-    padding: 15px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    display: flex; justify-content: space-between; align-items: center;
-    position: sticky; top: 0; z-index: 50;
-}
-.brand { font-weight: 800; font-size: 18px; color: var(--primary); }
-
-/* Menu Switcher */
-.menu-toggle {
-    display: flex; gap: 10px; margin: 15px;
-    background: #E4E6EB; padding: 5px; border-radius: 50px;
-}
-.menu-btn {
-    border: none; background: transparent; padding: 10px 20px;
-    border-radius: 40px; font-weight: 600; color: var(--text-sec);
-    cursor: pointer; transition: 0.2s;
-}
-.menu-btn.active {
-    background: var(--primary); color: var(--white); shadow: 0 2px 5px rgba(0,0,0,0.2);
+    max-width: 500px;
+    margin: 0 auto;
 }
 
-/* Container Scanner */
-#reader {
-    width: 100%; max-width: 500px;
-    border-radius: 12px; overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    background: #000;
+/* Lapisan Overlay (Default: Sembunyi) */
+.scan-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255, 255, 255, 0.9); /* Latar putih transparan */
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    
+    /* Efek transisi */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
 }
 
-/* Form Input Master (Sembunyi by default) */
-.form-master {
-    display: none; /* Disembunyikan dulu */
-    width: 90%; max-width: 400px;
-    background: var(--white);
-    padding: 20px; border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    margin-top: 15px;
-}
-.form-group { margin-bottom: 15px; text-align: left; }
-.form-label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: var(--text-sec); }
-.form-input {
-    width: 100%; padding: 12px;
-    border: 1px solid #CCD0D5; border-radius: 8px;
-    font-size: 16px; color: var(--text-main);
-    background: #FAFAFA;
-}
-.form-input:focus { border-color: var(--primary); outline: none; background: #fff; }
-
-.btn-save {
-    width: 100%; padding: 15px;
-    background: var(--success-color, #28a745);
-    color: white; border: none; border-radius: 8px;
-    font-weight: bold; font-size: 16px; cursor: pointer;
+/* Saat aktif (muncul) */
+.scan-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
 }
 
-/* Status Bar */
-#status-msg {
-    position: fixed; bottom: 20px;
-    background: #333; color: #fff;
-    padding: 12px 24px; border-radius: 50px;
-    font-size: 14px; opacity: 0; transition: 0.3s;
-    pointer-events: none; z-index: 100;
+/* Ikon Centang Besar */
+.success-icon {
+    font-size: 80px;
+    color: #10b981; /* Hijau Sukses */
+    transform: scale(0);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Efek membal (bouncy) */
 }
-.show-toast { opacity: 1 !important; transform: translateY(-10px); }
+
+.scan-overlay.active .success-icon {
+    transform: scale(1); /* Membesar */
+}
