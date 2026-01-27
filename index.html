@@ -2,44 +2,43 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner PDF417 & Universal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Scan App</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+    
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <style>
-        body { font-family: sans-serif; padding: 20px; text-align: center; }
-        #reader { 
-            width: 100%; 
-            max-width: 600px; /* Diperlebar sedikit */
-            margin: 0 auto; 
-            border: 2px solid #ccc;
-            border-radius: 8px;
-        }
-        #result { 
-            margin-top: 20px; 
-            font-weight: bold; 
-            color: #333; 
-            padding: 10px;
-            background-color: #f0f0f0;
-            border-radius: 4px;
-        }
-    </style>
 </head>
 <body>
 
-    <h2>Scan PDF417 (Part Honda) & QR</h2>
-    <div id="reader"></div>
-    <div id="result">Siap scan...</div>
+    <div class="app-header">
+        <h1>Scanner Inventory</h1>
+    </div>
+
+    <div class="scanner-wrapper">
+        <div id="reader"></div>
+    </div>
+
+    <div class="status-card">
+        <div class="status-title">STATUS</div>
+        <div id="result" class="status-text">Siap Scan...</div>
+    </div>
 
     <script>
-        // --- URL APPS SCRIPT ANDA ---
+        // --- CONFIG ---
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwCJLPFpjknY1UUKje86ZBhgKdexVSXwUs1tvV-NEhorxeqTE2Y3X3uJD5Lfa4u4B5W_w/exec";
 
         function onScanSuccess(decodedText, decodedResult) {
             html5QrcodeScanner.clear();
             
-            document.getElementById('result').innerText = `Mengirim: ${decodedText}...`;
-            document.getElementById('result').style.color = "blue";
+            // Update UI: Loading
+            const resultEl = document.getElementById('result');
+            resultEl.innerText = `Mengirim: ${decodedText}...`;
+            resultEl.className = "status-text loading-pulse";
 
+            // Kirim Data
             fetch(GOOGLE_SCRIPT_URL, {
                 method: "POST",
                 mode: "no-cors",
@@ -47,41 +46,46 @@
                 body: JSON.stringify({ barcode: decodedText })
             })
             .then(() => {
-                document.getElementById('result').innerText = `SUKSES! Data tersimpan.`;
-                document.getElementById('result').style.color = "green";
-                setTimeout(() => { location.reload(); }, 1500);
+                // Update UI: Sukses
+                resultEl.innerText = `✅ SUKSES: ${decodedText}`;
+                resultEl.classList.remove("loading-pulse");
+                resultEl.classList.add("status-success");
+                
+                if (window.navigator && window.navigator.vibrate) {
+                    window.navigator.vibrate(200); 
+                }
+
+                // Restart Scanner
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
             })
             .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('result').innerText = "Gagal mengirim data.";
+                resultEl.innerText = "❌ Gagal Mengirim";
+                resultEl.classList.add("status-error");
             });
         }
 
         function onScanFailure(error) {}
 
-        // --- UPDATE DAFTAR FORMAT ---
         const formatsToSupport = [
-            Html5QrcodeSupportedFormats.PDF_417,    // <--- KHUSUS UTK LABEL HONDA/KTP/SIM
-            Html5QrcodeSupportedFormats.QR_CODE,    
-            Html5QrcodeSupportedFormats.CODE_128,   
-            Html5QrcodeSupportedFormats.EAN_13,     
-            Html5QrcodeSupportedFormats.UPC_A,      
-            Html5QrcodeSupportedFormats.CODE_39     
+            Html5QrcodeSupportedFormats.PDF_417,
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.UPC_A, 
+            Html5QrcodeSupportedFormats.CODE_39
         ];
 
         let html5QrcodeScanner = new Html5QrcodeScanner(
             "reader", 
             { 
                 fps: 25, 
-                // Area scan saya ubah jadi PERSEGI PANJANG (350x200) 
-                // agar pas dengan bentuk barcode PDF417 yang panjang.
-                qrbox: {width: 350, height: 200}, 
+                qrbox: {width: 250, height: 200},
                 formatsToSupport: formatsToSupport,
-                experimentalFeatures: {
-                    useBarCodeDetectorIfSupported: true
-                }
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true }
             },
-            /* verbose= */ false
+            false
         );
         
         html5QrcodeScanner.render(onScanSuccess, onScanFailure);
