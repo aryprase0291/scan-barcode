@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Scanner (QR + Barcode)</title>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        #reader { 
+            width: 100%; 
+            max-width: 500px; 
+            margin: 0 auto; 
+            border: 2px solid #ccc;
+            border-radius: 8px;
+        }
+        #result { 
+            margin-top: 20px; 
+            font-weight: bold; 
+            color: #333; 
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Scan QR & Barcode</h2>
+    <div id="reader"></div>
+    <div id="result">Siap scan...</div>
+
+    <script>
+        // --- KONFIGURASI URL APPS SCRIPT ---
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwCJLPFpjknY1UUKje86ZBhgKdexVSXwUs1tvV-NEhorxeqTE2Y3X3uJD5Lfa4u4B5W_w/exec";
+
+        function onScanSuccess(decodedText, decodedResult) {
+            html5QrcodeScanner.clear();
+            
+            document.getElementById('result').innerText = `Mengirim: ${decodedText}...`;
+            document.getElementById('result').style.color = "blue";
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ barcode: decodedText })
+            })
+            .then(() => {
+                document.getElementById('result').innerText = `SUKSES! Data "${decodedText}" tersimpan.`;
+                document.getElementById('result').style.color = "green";
+                setTimeout(() => { location.reload(); }, 1500);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('result').innerText = "Gagal mengirim data.";
+            });
+        }
+
+        function onScanFailure(error) {}
+
+        // --- DAFTAR FORMAT LENGKAP ---
+        const formatsToSupport = [
+            Html5QrcodeSupportedFormats.QR_CODE,    // QR Code (Prioritas)
+            Html5QrcodeSupportedFormats.CODE_128,   // Resi
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.EAN_13,     // Produk
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.ITF
+        ];
+
+        let html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", 
+            { 
+                fps: 25, 
+                // KEMBALI KE KOTAK 250x250 (Penting untuk QR Code)
+                qrbox: {width: 250, height: 250}, 
+                formatsToSupport: formatsToSupport,
+                // WAJIB AKTIFKAN INI UNTUK QR CODE YANG SUSAH DIBACA
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true
+                }
+            },
+            /* verbose= */ false
+        );
+        
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    </script>
+
+</body>
+</html>
