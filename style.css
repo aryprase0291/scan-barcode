@@ -1,44 +1,261 @@
-/* --- TAMBAHAN: ANIMASI SUKSES --- */
+/* IMPORT FONT MODERN (Inter) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
-/* Wrapper agar overlay bisa menumpuk di atas kamera */
-.scanner-container {
-    position: relative;
+:root {
+    --primary: #CC0000; /* Merah Honda / Racing */
+    --primary-dark: #990000;
+    --bg-body: #F2F4F8; /* Abu-abu premium */
+    --card-bg: #FFFFFF;
+    --text-main: #1F2937;
+    --text-sec: #6B7280;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --radius: 16px;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    margin: 0; padding: 0;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh;
+}
+
+/* --- NAVBAR FIXED --- */
+.navbar {
     width: 100%;
-    max-width: 500px;
-    margin: 0 auto;
+    background: var(--card-bg);
+    padding: 15px 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    position: fixed; top: 0; z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
 }
+.brand { font-weight: 800; font-size: 18px; color: var(--text-main); letter-spacing: -0.5px; }
+.version-badge { background: #EEF2FF; color: var(--primary); padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: bold; }
 
-/* Lapisan Overlay (Default: Sembunyi) */
-.scan-overlay {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(255, 255, 255, 0.9); /* Latar putih transparan */
-    border-radius: 12px;
+/* --- MENU SWITCHER (SCROLLABLE) --- */
+.menu-container {
+    margin-top: 80px; /* Jarak dari navbar */
+    background: #E5E7EB;
+    padding: 4px;
+    border-radius: 50px;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10;
+    gap: 5px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
     
-    /* Efek transisi */
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
+    /* Agar bisa di-scroll horizontal di HP */
+    width: 95%;
+    max-width: 480px;
+    overflow-x: auto;
+    white-space: nowrap;
+    
+    /* Sembunyikan Scrollbar agar rapi */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+.menu-container::-webkit-scrollbar { display: none; }
+
+.menu-btn {
+    border: none; background: transparent;
+    padding: 10px 20px; border-radius: 40px;
+    font-size: 13px; font-weight: 600; color: var(--text-sec);
+    cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap; flex-shrink: 0;
+}
+.menu-btn.active {
+    background: var(--card-bg);
+    color: var(--primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-/* Saat aktif (muncul) */
-.scan-overlay.active {
-    opacity: 1;
-    pointer-events: auto;
+/* --- SCANNER AREA --- */
+.scanner-wrapper {
+    margin-top: 20px;
+    width: 90%;
+    max-width: 480px;
+    position: relative;
 }
 
-/* Ikon Centang Besar */
-.success-icon {
-    font-size: 80px;
-    color: #10b981; /* Hijau Sukses */
-    transform: scale(0);
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Efek membal (bouncy) */
+#reader {
+    width: 100%;
+    border-radius: 20px !important;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    background: #000;
+    border: none !important;
 }
 
-.scan-overlay.active .success-icon {
-    transform: scale(1); /* Membesar */
+/* HACK: Mempercantik tampilan bawaan library */
+#reader__scan_region { background: #000; }
+#reader__dashboard_section_csr span, #reader__dashboard_section_swaplink { display: none !important; }
+
+/* Tombol Izin Kamera */
+#html5-qrcode-button-camera-permission {
+    background: var(--primary); color: white;
+    border: none; padding: 12px 24px; border-radius: 12px;
+    font-weight: 600; margin-top: 40px; cursor: pointer;
 }
+
+/* --- FORM MASTER --- */
+.form-card {
+    background: var(--card-bg);
+    width: 90%; max-width: 480px;
+    margin-top: 20px; padding: 25px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display: none; 
+    animation: slideUp 0.3s ease-out;
+    margin-bottom: 50px; /* Space bawah agar tombol tidak kepotong */
+}
+@keyframes slideUp { from {transform: translateY(20px); opacity:0;} to {transform: translateY(0); opacity:1;} }
+
+.form-group { margin-bottom: 15px; }
+.label { display: block; font-size: 12px; font-weight: 700; color: var(--text-sec); margin-bottom: 6px; text-transform: uppercase; }
+
+.input-field {
+    width: 100%; padding: 14px;
+    border: 2px solid #F3F4F6; border-radius: 12px;
+    font-size: 16px; font-weight: 500; color: var(--text-main);
+    transition: 0.2s; background: #F9FAFB;
+}
+.input-field:focus { border-color: var(--primary); background: #fff; outline: none; }
+.input-readonly { background-color: #EEF2FF; color: var(--primary); border-color: transparent; }
+
+/* Hapus panah spinner pada input number (Harga) */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; margin: 0; 
+}
+
+.btn-primary {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white; border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 700;
+    cursor: pointer; box-shadow: 0 4px 15px rgba(204, 0, 0, 0.3);
+    margin-top: 10px;
+}
+.btn-primary:active { transform: scale(0.98); }
+
+/* --- OVERLAY SUKSES --- */
+.scan-overlay {
+    position: absolute; top:0; left:0; right:0; bottom:0;
+    background: rgba(255,255,255,0.95);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    border-radius: 20px; z-index: 50;
+    opacity: 0; pointer-events: none; transition: 0.3s;
+}
+.scan-overlay.active { opacity: 1; pointer-events: auto; }
+.check-icon { font-size: 60px; margin-bottom: 10px; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes popIn { from {transform: scale(0);} to {transform: scale(1);} }
+
+/* --- TOAST --- */
+#toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #1F2937; color: white; padding: 12px 24px;
+    border-radius: 50px; font-size: 14px; font-weight: 600;
+    opacity: 0; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    pointer-events: none; z-index: 999;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* --- DATA LIST VIEW --- */
+.list-container {
+    width: 90%; max-width: 480px; margin-top: 20px;
+    display: none; 
+    padding-bottom: 80px;
+}
+
+.search-box {
+    width: 100%; padding: 12px 15px;
+    border: 1px solid #ddd; border-radius: 12px;
+    margin-bottom: 15px; font-size: 16px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.item-card {
+    background: #fff; padding: 15px;
+    border-radius: 12px; margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex; justify-content: space-between; align-items: center;
+    border-left: 4px solid var(--primary);
+}
+.item-info { flex-grow: 1; }
+.item-name { font-weight: 700; font-size: 16px; color: #1F2937; margin-bottom: 4px; }
+
+/* Style baru untuk Badge Harga & Stok */
+.badge-price {
+    background: #DEF7EC; color: #03543F; padding: 4px 8px; 
+    border-radius: 6px; font-size: 12px; font-weight: bold; margin-right: 5px;
+}
+.badge-qty {
+    background: #E1EFFE; color: #1E429F; padding: 4px 8px;
+    border-radius: 6px; font-size: 12px; font-weight: bold;
+}
+.item-desc { font-size: 12px; color: #6B7280; font-style: italic; margin-top: 4px; }
+
+
+.action-group { display: flex; gap: 8px; }
+.btn-icon {
+    border: none; padding: 8px; border-radius: 8px;
+    cursor: pointer; font-size: 16px; transition: 0.2s;
+}
+.btn-edit { background: #EEF2FF; color: #4F46E5; }
+.btn-del { background: #FEF2F2; color: #EF4444; }
+.btn-edit:active, .btn-del:active { transform: scale(0.9); }
+
+.list-loader { text-align: center; color: #6B7280; margin-top: 20px; display: none; }
+
+/* --- LAPORAN UNIT --- */
+.report-container {
+    width: 90%; max-width: 480px; margin-top: 20px;
+    background: #fff; padding: 20px; border-radius: 16px;
+    box-shadow: var(--shadow);
+    display: none;
+    margin-bottom: 50px;
+}
+
+.date-group { display: flex; gap: 10px; margin-bottom: 15px; }
+.date-input {
+    width: 50%; padding: 10px;
+    border: 1px solid #ddd; border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+}
+
+.report-summary {
+    background: #EEF2FF; padding: 15px;
+    border-radius: 12px; text-align: center;
+    margin-bottom: 20px; border: 1px solid #C7D2FE;
+}
+.big-number { font-size: 32px; font-weight: 800; color: var(--primary); display: block; }
+
+.report-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.report-table th { text-align: left; padding: 10px; background: #F9FAFB; border-bottom: 2px solid #E5E7EB; }
+.report-table td { padding: 10px; border-bottom: 1px solid #F3F4F6; }
+.badge-count {
+    background: var(--text-main); color: #fff;
+    padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;
+}
+
+/* --- TOGGLE SWITCH KAMERA --- */
+.toggle-container {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #F3F4F6; padding: 10px 15px; border-radius: 12px; margin-bottom: 15px;
+}
+.toggle-label { font-weight: 600; color: #374151; font-size: 14px; }
+
+/* The Switch Box */
+.switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc; transition: .4s; border-radius: 34px;
+}
+.slider:before {
+    position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 3px;
+    background-color: white; transition: .4s; border-radius: 50%;
+}
+input:checked + .slider { background-color: var(--primary); }
+input:checked + .slider:before { transform: translateX(24px); }
