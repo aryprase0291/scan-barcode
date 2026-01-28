@@ -25,13 +25,55 @@
     </div>
 
     <div id="view-scan" class="scanner-wrapper">
-        <div id="scan-title" style="text-align:center; margin-bottom:10px; font-weight:bold; color:#666;">
-            MODE: SCAN SPAREPART (LOG)
+        <div class="tx-switch-container">
+            <input type="radio" id="mode-out" name="tx_mode" value="OUT" checked>
+            <label for="mode-out" class="switch-btn btn-out">KELUAR (Pakai)</label>
+            
+            <input type="radio" id="mode-in" name="tx_mode" value="IN">
+            <label for="mode-in" class="switch-btn btn-in">MASUK (Restock)</label>
         </div>
+
+        <div id="scan-title" style="text-align:center; margin:10px 0; font-weight:bold; color:#666;">
+            ARAHKAN KAMERA KE BARCODE
+        </div>
+        
         <div id="reader"></div>
+        
         <div id="overlay-success" class="scan-overlay">
             <div class="check-icon">✅</div>
-            <div style="font-weight: bold; font-size: 18px; color: #10b981;">DATA MASUK</div>
+            <div style="font-weight: bold; font-size: 18px; color: #10b981;">DATA TERKIRIM</div>
+        </div>
+    </div>
+
+    <div id="modal-qty" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <span id="modal-title">KONFIRMASI TRANSAKSI</span>
+                <button onclick="closeModal()" style="background:none; border:none; font-size:20px;">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="form-group">
+                    <span class="label">Barcode</span>
+                    <input type="text" id="tx-barcode" class="input-field input-readonly" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <span class="label">Jumlah (Qty)</span>
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" class="btn-qty" onclick="adjustQty(-1)">-</button>
+                        <input type="number" id="tx-qty" class="input-field" value="1" style="text-align:center; font-weight:bold;">
+                        <button type="button" class="btn-qty" onclick="adjustQty(1)">+</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <span class="label">Keterangan (Opsional)</span>
+                    <input type="text" id="tx-ket" class="input-field" placeholder="Contoh: Service NMAX B 1234...">
+                </div>
+
+                <button class="btn-primary" onclick="kirimTransaksi()">KIRIM DATA</button>
+            </div>
         </div>
     </div>
 

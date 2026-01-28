@@ -2,7 +2,7 @@
 // KONFIGURASI BACKEND
 // ============================================================================
 // Ganti URL di bawah ini setiap kali Anda melakukan Deploy Baru (New Version)
-const API_URL = "https://script.google.com/macros/s/AKfycbzZW60YnakgLXhiIUrRlIjg5e8csEL9BgbLmyRxcv-g8kGHPuiL9L7Je53Ix2aXAk6ARg/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbwwnKO89J5CgRmYjCkmN0tH5qZ206KviRn-DJxceXBFzbe02esKcuOjNAIRKvyy4nRQOw/exec"; 
 
 // ============================================================================
 // GLOBAL VARIABLES
@@ -101,17 +101,23 @@ function initMainScanner() {
 function onScanSuccess(decodedText) {
     if (window.navigator.vibrate) window.navigator.vibrate(200);
 
+    // --- LOGIKA BARU SCAN SPAREPART ---
     if (currentMode === 'scan') {
-        html5QrcodeScanner.pause();
-        kirimData({ action: 'scan_biasa', barcode: decodedText });
+        html5QrcodeScanner.pause(); // Pause kamera
+        
+        // Ambil Jenis Transaksi dari Radio Button
+        const mode = document.querySelector('input[name="tx_mode"]:checked').value;
+        
+        // Buka Popup Qty
+        showQtyModal(decodedText, mode);
     } 
+    // --- LOGIKA LAMA (UNIT) ---
     else if (currentMode === 'unit') {
         html5QrcodeScanner.pause();
         kirimData({ action: 'scan_kendaraan', barcode: decodedText });
     }
+    // --- LOGIKA MASTER ---
     else if (currentMode === 'master') {
-        // Ini jarang kepakai karena master punya scanner sendiri (miniScanner)
-        // tapi kita biarkan untuk jaga-jaga
         document.getElementById('inp_barcode').value = decodedText;
         showToast("Barcode Terbaca");
         html5QrcodeScanner.pause();
@@ -349,4 +355,65 @@ function showToast(text, persistent=false) {
     const el = document.getElementById('toast');
     el.innerText = text; el.classList.add('show');
     if(!persistent) setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ============================================================================
+// MODUL BARU: TRANSAKSI POPUP
+// ============================================================================
+function showQtyModal(barcode, mode) {
+    const modal = document.getElementById('modal-qty');
+    const title = document.getElementById('modal-title');
+    
+    // Set UI berdasarkan Mode
+    if(mode === 'IN') {
+        title.innerText = "RESTOCK (BARANG MASUK)";
+        title.style.color = "#059669"; // Hijau
+    } else {
+        title.innerText = "PEMAKAIAN (BARANG KELUAR)";
+        title.style.color = "#DC2626"; // Merah
+    }
+
+    // Isi Form
+    document.getElementById('tx-barcode').value = barcode;
+    document.getElementById('tx-qty').value = "1";
+    document.getElementById('tx-ket').value = "";
+    
+    // Tampilkan
+    modal.style.display = 'flex';
+    document.getElementById('tx-qty').focus();
+}
+
+function closeModal() {
+    document.getElementById('modal-qty').style.display = 'none';
+    // Resume kamera jika diclose
+    if(html5QrcodeScanner) html5QrcodeScanner.resume();
+}
+
+function adjustQty(amount) {
+    const el = document.getElementById('tx-qty');
+    let val = parseInt(el.value) || 0;
+    val += amount;
+    if(val < 1) val = 1;
+    el.value = val;
+}
+
+function kirimTransaksi() {
+    const barcode = document.getElementById('tx-barcode').value;
+    const qty = document.getElementById('tx-qty').value;
+    const ket = document.getElementById('tx-ket').value;
+    const mode = document.querySelector('input[name="tx_mode"]:checked').value; // IN atau OUT
+
+    if(!qty || qty < 1) { alert("Jumlah minimal 1!"); return; }
+
+    // Tutup Modal
+    document.getElementById('modal-qty').style.display = 'none';
+
+    // Kirim ke Backend (Sesuai script doPost yang baru)
+    kirimData({
+        action: 'transaksi_part',
+        barcode: barcode,
+        qty: qty,
+        jenis: mode,
+        keterangan: ket
+    });
 }

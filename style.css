@@ -259,3 +259,39 @@ input[type=number]::-webkit-outer-spin-button {
 }
 input:checked + .slider { background-color: var(--primary); }
 input:checked + .slider:before { transform: translateX(24px); }
+
+/* --- NEW: SWITCH TRANSAKSI (IN/OUT) --- */
+.tx-switch-container {
+    display: flex; background: #E5E7EB;
+    padding: 4px; border-radius: 12px;
+    margin-bottom: 15px;
+}
+.tx-switch-container input { display: none; }
+.switch-btn {
+    flex: 1; padding: 10px; text-align: center;
+    font-size: 13px; font-weight: 800; border-radius: 8px;
+    cursor: pointer; transition: 0.3s; color: #6B7280;
+}
+/* Warna saat Dipilih */
+#mode-out:checked + .btn-out { background: #FEF2F2; color: #DC2626; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+#mode-in:checked + .btn-in { background: #ECFDF5; color: #059669; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+/* --- NEW: MODAL POPUP QTY --- */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6); z-index: 200;
+    display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(3px);
+}
+.modal-card {
+    background: white; width: 90%; max-width: 400px;
+    border-radius: 16px; padding: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: 800; font-size: 16px; }
+.btn-qty {
+    background: #F3F4F6; border: none; width: 50px; border-radius: 8px;
+    font-size: 20px; font-weight: bold; cursor: pointer; color: #374151;
+}
+.btn-qty:active { background: #D1D5DB; }
