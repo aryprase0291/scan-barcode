@@ -25,6 +25,7 @@
     </div>
 
     <div id="view-scan" class="scanner-wrapper">
+        
         <div class="tx-switch-container">
             <input type="radio" id="mode-out" name="tx_mode" value="OUT" checked>
             <label for="mode-out" class="switch-btn btn-out">KELUAR (Pakai)</label>
@@ -38,7 +39,17 @@
         </div>
         
         <div id="reader"></div>
-        
+
+        <div class="manual-input-wrapper">
+            <div style="text-align:center; margin: 10px 0; font-size: 12px; color:#999;">
+                — ATAU KETIK KODE —
+            </div>
+            <div style="display:flex; gap:8px;">
+                <input type="text" id="manual-barcode" class="input-field" placeholder="Ketik kode part..." style="margin-bottom:0;">
+                <button class="btn-primary" onclick="prosesManual()" style="width:auto; margin-top:0; padding:0 20px;">OK</button>
+            </div>
+        </div>
+
         <div id="overlay-success" class="scan-overlay">
             <div class="check-icon">✅</div>
             <div style="font-weight: bold; font-size: 18px; color: #10b981;">DATA TERKIRIM</div>
@@ -105,7 +116,7 @@
         </div>
 
         <div class="form-group">
-            <span class="label">Harga Jual (Rp)</span>
+            <span class="label">Harga Jual ($)</span>
             <input type="number" id="inp_harga" class="input-field" placeholder="0">
         </div>
 

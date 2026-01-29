@@ -295,3 +295,11 @@ input:checked + .slider:before { transform: translateX(24px); }
     font-size: 20px; font-weight: bold; cursor: pointer; color: #374151;
 }
 .btn-qty:active { background: #D1D5DB; }
+
+.manual-input-wrapper {
+    margin-top: 15px;
+    padding: 10px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}

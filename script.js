@@ -81,10 +81,11 @@ function setMode(mode) {
 // LOGIKA SCANNER UTAMA (MODE WIDE & HIGH DENSITY)
 // ============================================================================
 function initMainScanner() {
-    // 1. Prioritas Format: Fokus ke 1D Barcode (Garis)
+    // TAMBAHKAN PDF_417 ke dalam daftar format!
     const formats = [ 
-        Html5QrcodeSupportedFormats.CODE_128, // Paling umum untuk sparepart
-        Html5QrcodeSupportedFormats.CODE_39,  
+        Html5QrcodeSupportedFormats.PDF_417,  // <--- WAJIB ADA untuk Sparepart Honda
+        Html5QrcodeSupportedFormats.CODE_128, 
+        Html5QrcodeSupportedFormats.CODE_39,
         Html5QrcodeSupportedFormats.EAN_13,
         Html5QrcodeSupportedFormats.QR_CODE 
     ];
@@ -93,45 +94,29 @@ function initMainScanner() {
         html5QrcodeScanner = new Html5QrcodeScanner(
             "reader", 
             { 
-                fps: 30, // Scan lebih cepat
-                
-                // 2. KUNCI SUKSES: Ubah Kotak Scan jadi PERSEGI PANJANG (WIDE)
-                // Agar user dipaksa memposisikan barcode secara horizontal penuh
+                fps: 30, 
+                // Pertahankan rasio Wide (Gepeng) karena PDF417 Honda juga memanjang
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    let minEdgePercentage = 0.85; // Pakai 85% lebar layar
+                    let minEdgePercentage = 0.90; 
                     let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
                     let qrboxWidth = Math.floor(minEdgeSize * minEdgePercentage);
-                    
                     return {
                         width: qrboxWidth,
-                        height: Math.floor(qrboxWidth * 0.4) // Tinggi cuma 40% dari lebar (Gepeng)
+                        height: Math.floor(qrboxWidth * 0.45) 
                     };
                 },
-                
                 formatsToSupport: formats, 
-                
-                // 3. FITUR "CHEAT": Gunakan Barcode Detector Bawaan Android/iOS (Lebih Canggih)
-                // Ini akan mem-bypass pemrosesan lambat browser dan pakai chip HP langsung
-                experimentalFeatures: { 
-                    useBarCodeDetectorIfSupported: true 
-                },
-                
-                // 4. Video Config: Paksa kamera belakang & resolusi tinggi
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true },
                 videoConstraints: {
                     facingMode: "environment",
-                    focusMode: "continuous", // Paksa autofocus terus menerus
-                    width: { min: 1280, ideal: 1920 }, // Minta resolusi HD agar garis tipis terbaca
-                    height: { min: 720, ideal: 1080 } 
+                    focusMode: "continuous",
+                    width: { min: 1024, ideal: 1920 }, // Resolusi tinggi bantu PDF417
+                    height: { min: 768, ideal: 1080 } 
                 }
             }, 
             false
         );
-        
-        // Render
-        html5QrcodeScanner.render(onScanSuccess, (errorMessage) => {
-            // Error handling diam (biar console bersih)
-        });
-
+        html5QrcodeScanner.render(onScanSuccess, ()=>{});
     } else {
         try { html5QrcodeScanner.resume(); } catch(e) {}
     }
@@ -520,4 +505,21 @@ function kirimTransaksi() {
         jenis: mode,
         keterangan: ket
     });
+}
+
+function prosesManual() {
+    const code = document.getElementById('manual-barcode').value;
+    if(!code) {
+        showToast("Isi kode dulu!");
+        return;
+    }
+    
+    // Ambil mode saat ini (IN/OUT)
+    const mode = document.querySelector('input[name="tx_mode"]:checked').value;
+    
+    // Panggil logika yang sama dengan hasil scan kamera
+    showQtyModal(code, mode);
+    
+    // Reset input manual
+    document.getElementById('manual-barcode').value = "";
 }
