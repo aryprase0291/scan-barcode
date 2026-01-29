@@ -2,7 +2,7 @@
 // KONFIGURASI BACKEND
 // ============================================================================
 // Ganti URL di bawah ini setiap kali Anda melakukan Deploy Baru (New Version)
-const API_URL = "https://script.google.com/macros/s/AKfycbwwnKO89J5CgRmYjCkmN0tH5qZ206KviRn-DJxceXBFzbe02esKcuOjNAIRKvyy4nRQOw/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbzYchXTRCGPXHZbzmIi1hjqHbu_7rjbuXSaY3fd9vVZrKYzvyU1G97_2G1hTKFT1MOw/exec"; 
 
 // ============================================================================
 // GLOBAL VARIABLES
@@ -37,23 +37,30 @@ function setMode(mode) {
         document.getElementById(id).style.display = 'none';
     });
 
-    // Matikan Scanner Utama sementara (biar hemat resource/tidak bentrok)
+    
     if(html5QrcodeScanner) {
         try { html5QrcodeScanner.pause(); } catch(e){}
     }
 
-    // Logika Per Mode
-    if(mode === 'scan') {
+    // --- UPDATE LABEL SWITCH SESUAI MODE ---
+    const lblIn = document.querySelector('.btn-in');
+    const lblOut = document.querySelector('.btn-out');
+
+    if(mode === 'scan') { // Mode Sparepart
         document.getElementById('view-scan').style.display = 'block';
-        document.getElementById('scan-title').innerText = "MODE: SCAN SPAREPART (LOG)";
-        document.getElementById('scan-title').style.color = "#666";
-        initMainScanner(); // Nyalakan Scanner
+        document.getElementById('scan-title').innerText = "MODE: SPAREPART / PART";
+        // Label Switch
+        lblIn.innerText = "MASUK (Restock)";
+        lblOut.innerText = "KELUAR (Pakai)";
+        initMainScanner();
     }
-    else if(mode === 'unit') {
+    else if(mode === 'unit') { // Mode Unit
         document.getElementById('view-scan').style.display = 'block';
-        document.getElementById('scan-title').innerText = "MODE: SCAN UNIT KENDARAAN";
-        document.getElementById('scan-title').style.color = "#d93025";
-        initMainScanner(); // Nyalakan Scanner
+        document.getElementById('scan-title').innerText = "MODE: UNIT KENDARAAN";
+        // Label Switch
+        lblIn.innerText = "TERIMA (Cek Manifest)";
+        lblOut.innerText = "JUAL (Delivery)";
+        initMainScanner();
     }
     else if(mode === 'master') {
         resetForm();
@@ -72,11 +79,16 @@ function setMode(mode) {
 // ============================================================================
 // LOGIKA SCANNER UTAMA
 // ============================================================================
+// ============================================================================
+// LOGIKA SCANNER UTAMA (DIPERBARUI)
+// ============================================================================
 function initMainScanner() {
+    // Prioritas Format untuk Sparepart Otomotif (Honda/Yamaha/dll)
     const formats = [ 
-        Html5QrcodeSupportedFormats.PDF_417, 
-        Html5QrcodeSupportedFormats.QR_CODE, 
-        Html5QrcodeSupportedFormats.CODE_128, 
+        Html5QrcodeSupportedFormats.CODE_128, // Garis batang biasa (Paling umum)
+        Html5QrcodeSupportedFormats.CODE_39,  // Garis batang lama
+        Html5QrcodeSupportedFormats.PDF_417,  // Kotak bintik (Honda Parts)
+        Html5QrcodeSupportedFormats.QR_CODE,  
         Html5QrcodeSupportedFormats.EAN_13 
     ];
 
@@ -84,16 +96,34 @@ function initMainScanner() {
         html5QrcodeScanner = new Html5QrcodeScanner(
             "reader", 
             { 
-                fps: 20, 
-                qrbox: {width: 300, height: 150}, 
+                fps: 30, // Naikkan FPS agar lebih cepat tangkap
+                // Kotak scan dinamis (70% lebar layar) agar barcode panjang muat
+                qrbox: function(viewfinderWidth, viewfinderHeight) {
+                    let minEdgePercentage = 0.70; 
+                    let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                    let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+                    return {
+                        width: qrboxSize,
+                        height: Math.floor(qrboxSize * 0.6) // Lebih gepeng persegi panjang
+                    };
+                },
                 formatsToSupport: formats, 
-                experimentalFeatures: { useBarCodeDetectorIfSupported: true } 
+                // Fitur Eksperimental untuk performa
+                experimentalFeatures: { 
+                    useBarCodeDetectorIfSupported: true 
+                },
+                // Paksa kamera untuk fokus terus menerus (jika didukung hardware)
+                videoConstraints: {
+                    focusMode: "continuous",
+                    facingMode: "environment" 
+                }
             }, 
             false
         );
-        html5QrcodeScanner.render(onScanSuccess, ()=>{});
+        html5QrcodeScanner.render(onScanSuccess, (errorMessage) => {
+            // Error scanning biasa, abaikan agar log tidak penuh
+        });
     } else {
-        // Jika sudah ada, resume saja
         try { html5QrcodeScanner.resume(); } catch(e) {}
     }
 }
@@ -363,24 +393,35 @@ function showToast(text, persistent=false) {
 function showQtyModal(barcode, mode) {
     const modal = document.getElementById('modal-qty');
     const title = document.getElementById('modal-title');
+    const qtyWrapper = document.getElementById('tx-qty').parentElement.parentElement; // Wrapper input qty
     
-    // Set UI berdasarkan Mode
+    // Set UI Title
     if(mode === 'IN') {
-        title.innerText = "RESTOCK (BARANG MASUK)";
-        title.style.color = "#059669"; // Hijau
+        title.innerText = currentMode === 'unit' ? "TERIMA UNIT?" : "RESTOCK PART";
+        title.style.color = "#059669"; 
     } else {
-        title.innerText = "PEMAKAIAN (BARANG KELUAR)";
-        title.style.color = "#DC2626"; // Merah
+        title.innerText = currentMode === 'unit' ? "JUAL UNIT?" : "PEMAKAIAN PART";
+        title.style.color = "#DC2626"; 
+    }
+
+    // Set UI Title
+    if(mode === 'IN') {
+        title.innerText = currentMode === 'unit' ? "TERIMA UNIT?" : "RESTOCK PART";
+        title.style.color = "#059669"; 
+    } else {
+        title.innerText = currentMode === 'unit' ? "JUAL UNIT?" : "PEMAKAIAN PART";
+        title.style.color = "#DC2626"; 
     }
 
     // Isi Form
     document.getElementById('tx-barcode').value = barcode;
-    document.getElementById('tx-qty').value = "1";
     document.getElementById('tx-ket').value = "";
     
     // Tampilkan
     modal.style.display = 'flex';
-    document.getElementById('tx-qty').focus();
+    // Fokus ke keterangan kalau unit, ke qty kalau part
+    if(currentMode === 'unit') document.getElementById('tx-ket').focus();
+    else document.getElementById('tx-qty').focus();
 }
 
 function closeModal() {
@@ -401,16 +442,24 @@ function kirimTransaksi() {
     const barcode = document.getElementById('tx-barcode').value;
     const qty = document.getElementById('tx-qty').value;
     const ket = document.getElementById('tx-ket').value;
-    const mode = document.querySelector('input[name="tx_mode"]:checked').value; // IN atau OUT
+    const mode = document.querySelector('input[name="tx_mode"]:checked').value;
 
     if(!qty || qty < 1) { alert("Jumlah minimal 1!"); return; }
 
-    // Tutup Modal
     document.getElementById('modal-qty').style.display = 'none';
 
-    // Kirim ke Backend (Sesuai script doPost yang baru)
+    // --- BAGIAN INI SANGAT PENTING ---
+    // Cek kita sedang di mode apa?
+    let actionName = 'transaksi_part'; 
+    
+    // Jika sedang mode unit, ganti nama actionnya
+    if(currentMode === 'unit') {
+        actionName = 'transaksi_unit';
+    }
+
+    // Kirim ke Backend
     kirimData({
-        action: 'transaksi_part',
+        action: actionName, // <--- Jangan di-hardcode jadi 'transaksi_part'
         barcode: barcode,
         qty: qty,
         jenis: mode,
