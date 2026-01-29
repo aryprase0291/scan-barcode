@@ -349,8 +349,14 @@ function renderList(data) {
         return;
     }
     data.forEach(item => {
-        // Format Rupiah
-        let hargaRp = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits:0 }).format(item.harga || 0);
+        // KOREKSI DISINI: Ubah ke format USD ($)
+        // en-US akan mengubah format jadi $10,000 (pakai koma)
+        let hargaDolar = new Intl.NumberFormat('en-US', { 
+            style: 'currency', 
+            currency: 'USD', 
+            minimumFractionDigits: 0 
+        }).format(item.harga || 0);
+
         // Default Stok 0 jika kosong
         let stok = item.stok || 0;
 
@@ -359,7 +365,7 @@ function renderList(data) {
                 <div class="item-info">
                     <div class="item-name">${item.nama}</div>
                     <div style="margin-bottom:5px;">
-                        <span class="badge-price">${hargaRp}</span>
+                        <span class="badge-price">${hargaDolar}</span>
                         <span class="badge-qty">Stok: ${stok} ${item.satuan}</span>
                     </div>
                     <div class="item-desc">${item.barcode} | ${item.keterangan}</div>
