@@ -303,3 +303,23 @@ input:checked + .slider:before { transform: translateX(24px); }
     border-radius: 12px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
+
+/* --- DOWNLOAD BUTTONS --- */
+.download-bar {
+    display: flex; gap: 10px; margin-bottom: 15px;
+}
+
+.btn-download {
+    flex: 1; padding: 10px; border: none; border-radius: 8px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    color: white; transition: 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+
+.btn-download:active { transform: scale(0.95); }
+
+/* Warna Khas Excel (Hijau) */
+.btn-excel { background: #107C41; box-shadow: 0 3px 10px rgba(16, 124, 65, 0.3); }
+
+/* Warna Khas PDF (Merah) */
+.btn-pdf { background: #D32F2F; box-shadow: 0 3px 10px rgba(211, 47, 47, 0.3); }

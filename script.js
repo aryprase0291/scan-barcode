@@ -523,3 +523,107 @@ function prosesManual() {
     // Reset input manual
     document.getElementById('manual-barcode').value = "";
 }
+
+// ============================================================================
+// MODUL EXPORT DATA (EXCEL & PDF)
+// ============================================================================
+
+function downloadExcel() {
+    if (!masterData || masterData.length === 0) {
+        showToast("Tidak ada data untuk didownload");
+        return;
+    }
+
+    // 1. Format Data agar Rapi di Excel
+    const dataExport = masterData.map(item => ({
+        "Barcode": item.barcode,
+        "Nama Barang": item.nama,
+        "Satuan": item.satuan,
+        "Harga Jual": item.harga, // Biarkan angka agar bisa dijumlah
+        "Stok Saat Ini": item.stok || 0,
+        "Keterangan": item.keterangan
+    }));
+
+    // 2. Buat Worksheet & Workbook
+    const ws = XLSX.utils.json_to_sheet(dataExport);
+    
+    // Auto-width kolom (biar gak sempit)
+    const wscols = [
+        {wch: 15}, {wch: 30}, {wch: 10}, {wch: 15}, {wch: 10}, {wch: 25}
+    ];
+    ws['!cols'] = wscols;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Stok Gudang");
+
+    // 3. Download File
+    const tanggal = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `Laporan_Stok_${tanggal}.xlsx`);
+}
+
+function downloadPDF() {
+    if (!masterData || masterData.length === 0) {
+        showToast("Tidak ada data untuk didownload");
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    
+    // 1. KOREKSI: Set Orientation ke 'landscape' (Mendatar)
+    const doc = new jsPDF({ orientation: "landscape" }); 
+
+    // 2. Judul Laporan (Center di Landscape A4: Lebar 297mm / 2 = ~148.5)
+    const tanggal = new Date().toLocaleDateString('id-ID', { 
+        day: 'numeric', month: 'long', year: 'numeric' 
+    });
+    
+    doc.setFontSize(16);
+    doc.text("LAPORAN STOK BARANG", 148, 15, { align: "center" });
+    doc.setFontSize(10);
+    doc.text(`Per Tanggal: ${tanggal}`, 148, 22, { align: "center" });
+
+    // 3. Siapkan Data Tabel
+    const tableColumn = ["Barcode", "Nama Barang", "Satuan", "Harga ($)", "Stok", "Keterangan"];
+    const tableRows = [];
+
+    masterData.forEach(item => {
+        let hargaFmt = new Intl.NumberFormat('en-US', { 
+            style: 'currency', currency: 'USD', minimumFractionDigits: 0 
+        }).format(item.harga || 0);
+
+        const rowData = [
+            item.barcode,
+            item.nama,
+            item.satuan,
+            hargaFmt,
+            item.stok || 0,
+            item.keterangan || "-"
+        ];
+        tableRows.push(rowData);
+    });
+
+    // 4. Generate Tabel (AutoTable) dengan Layout Fixed Landscape
+    doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 30,
+        theme: 'grid',
+        styles: { fontSize: 9, cellPadding: 3 }, // Font sedikit diperbesar
+        headStyles: { fillColor: [204, 0, 0], halign: 'center' }, // Header Merah
+        
+        // KOREKSI: Setting Margin & Lebar agar Full Kertas
+        margin: { top: 30, left: 10, right: 10 }, // Margin kiri kanan tipis agar muat banyak
+        tableWidth: 'auto', // Otomatis memenuhi margin (Fixed width relative to page)
+        
+        columnStyles: {
+            0: { cellWidth: 35 }, // Barcode
+            1: { cellWidth: 60 }, // Nama Barang (Diberi porsi lebar)
+            2: { cellWidth: 20, halign: 'center' }, // Satuan
+            3: { cellWidth: 25, halign: 'right' }, // Harga
+            4: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }, // Stok
+            5: { cellWidth: 'auto' } // Keterangan (Memakai sisa ruang yang ada / Fill)
+        }
+    });
+
+    doc.save(`Laporan_Stok_${tanggal}.pdf`);
+}
