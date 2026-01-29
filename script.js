@@ -76,53 +76,62 @@ function setMode(mode) {
     }
 }
 
+
 // ============================================================================
-// LOGIKA SCANNER UTAMA
-// ============================================================================
-// ============================================================================
-// LOGIKA SCANNER UTAMA (DIPERBARUI)
+// LOGIKA SCANNER UTAMA (MODE WIDE & HIGH DENSITY)
 // ============================================================================
 function initMainScanner() {
-    // Prioritas Format untuk Sparepart Otomotif (Honda/Yamaha/dll)
+    // 1. Prioritas Format: Fokus ke 1D Barcode (Garis)
     const formats = [ 
-        Html5QrcodeSupportedFormats.CODE_128, // Garis batang biasa (Paling umum)
-        Html5QrcodeSupportedFormats.CODE_39,  // Garis batang lama
-        Html5QrcodeSupportedFormats.PDF_417,  // Kotak bintik (Honda Parts)
-        Html5QrcodeSupportedFormats.QR_CODE,  
-        Html5QrcodeSupportedFormats.EAN_13 
+        Html5QrcodeSupportedFormats.CODE_128, // Paling umum untuk sparepart
+        Html5QrcodeSupportedFormats.CODE_39,  
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.QR_CODE 
     ];
 
     if(!html5QrcodeScanner) {
         html5QrcodeScanner = new Html5QrcodeScanner(
             "reader", 
             { 
-                fps: 30, // Naikkan FPS agar lebih cepat tangkap
-                // Kotak scan dinamis (70% lebar layar) agar barcode panjang muat
+                fps: 30, // Scan lebih cepat
+                
+                // 2. KUNCI SUKSES: Ubah Kotak Scan jadi PERSEGI PANJANG (WIDE)
+                // Agar user dipaksa memposisikan barcode secara horizontal penuh
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    let minEdgePercentage = 0.70; 
+                    let minEdgePercentage = 0.85; // Pakai 85% lebar layar
                     let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-                    let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+                    let qrboxWidth = Math.floor(minEdgeSize * minEdgePercentage);
+                    
                     return {
-                        width: qrboxSize,
-                        height: Math.floor(qrboxSize * 0.6) // Lebih gepeng persegi panjang
+                        width: qrboxWidth,
+                        height: Math.floor(qrboxWidth * 0.4) // Tinggi cuma 40% dari lebar (Gepeng)
                     };
                 },
+                
                 formatsToSupport: formats, 
-                // Fitur Eksperimental untuk performa
+                
+                // 3. FITUR "CHEAT": Gunakan Barcode Detector Bawaan Android/iOS (Lebih Canggih)
+                // Ini akan mem-bypass pemrosesan lambat browser dan pakai chip HP langsung
                 experimentalFeatures: { 
                     useBarCodeDetectorIfSupported: true 
                 },
-                // Paksa kamera untuk fokus terus menerus (jika didukung hardware)
+                
+                // 4. Video Config: Paksa kamera belakang & resolusi tinggi
                 videoConstraints: {
-                    focusMode: "continuous",
-                    facingMode: "environment" 
+                    facingMode: "environment",
+                    focusMode: "continuous", // Paksa autofocus terus menerus
+                    width: { min: 1280, ideal: 1920 }, // Minta resolusi HD agar garis tipis terbaca
+                    height: { min: 720, ideal: 1080 } 
                 }
             }, 
             false
         );
+        
+        // Render
         html5QrcodeScanner.render(onScanSuccess, (errorMessage) => {
-            // Error scanning biasa, abaikan agar log tidak penuh
+            // Error handling diam (biar console bersih)
         });
+
     } else {
         try { html5QrcodeScanner.resume(); } catch(e) {}
     }
@@ -259,12 +268,52 @@ function toggleCameraInput() {
         
         // Init Scanner Kecil jika belum ada
         if (!miniScanner) {
-            miniScanner = new Html5QrcodeScanner("reader-mini", { fps: 10, qrbox: 200 }, false);
+            // Config Formats (Sama dengan Main Scanner)
+            const formats = [ 
+                Html5QrcodeSupportedFormats.CODE_128, 
+                Html5QrcodeSupportedFormats.CODE_39, 
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.QR_CODE 
+            ];
+
+            miniScanner = new Html5QrcodeScanner(
+                "reader-mini", 
+                { 
+                    fps: 30, // Scan lebih cepat (sebelumnya 10)
+                    
+                    // KOREKSI PROPORSI: Ubah jadi Wide (Persegi Panjang)
+                    qrbox: function(viewfinderWidth, viewfinderHeight) {
+                        // Gunakan 90% lebar container karena areanya sempit
+                        let minEdgePercentage = 0.90; 
+                        let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                        let qrboxWidth = Math.floor(minEdgeSize * minEdgePercentage);
+                        
+                        return {
+                            width: qrboxWidth,
+                            height: Math.floor(qrboxWidth * 0.45) // Tinggi 45% dari lebar
+                        };
+                    },
+                    
+                    formatsToSupport: formats,
+                    experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+                    
+                    // Paksa Fokus Kamera Belakang
+                    videoConstraints: {
+                        facingMode: "environment",
+                        focusMode: "continuous" 
+                    }
+                }, 
+                false
+            );
+
             miniScanner.render((decodedText) => {
                 // Saat scan berhasil
                 document.getElementById('inp_barcode').value = decodedText;
                 showToast("Barcode Terisi!");
                 if (window.navigator.vibrate) window.navigator.vibrate(200);
+                
+                // Opsional: Matikan kamera otomatis setelah dapat data (biar hemat baterai)
+                // document.getElementById('chk-camera').click(); 
             });
         }
     } else {
