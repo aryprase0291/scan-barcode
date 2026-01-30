@@ -2,7 +2,7 @@
 
 :root {
     /* Soft Red Theme */
-    --primary: #EF4444; /* Merah yang lebih soft & modern */
+    --primary: #EF4444;
     --primary-gradient: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
     --bg-app: #F3F4F6;
     --surface: #FFFFFF;
@@ -23,7 +23,6 @@ body {
     background-color: var(--bg-app);
     color: var(--text-dark);
     margin: 0; padding: 0;
-    /* Mencegah overscroll bounce di iOS */
     overscroll-behavior-y: none;
 }
 
@@ -94,7 +93,7 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- SCANNER & SWITCH --- */
+/* --- SCANNER (MAIN) & SWITCH --- */
 .tx-switch-container {
     background: white; padding: 5px; border-radius: 50px;
     display: flex; margin-bottom: 20px;
@@ -214,67 +213,64 @@ body {
     cursor: pointer; white-space: nowrap;
 }
 
-/* --- ITEM CARD REVISION --- */
+/* --- ITEM CARD V4 (CLICKABLE & FLOATING ACTIONS) --- */
 .item-card {
-    position: relative; /* Wajib: agar tombol bisa diposisikan absolut */
-    display: block; /* Ubah dari flex ke block agar layout lebih bebas */
-    background: white; padding: 16px 16px 16px 20px;
-    border-radius: var(--radius-md); 
-    margin-bottom: 12px; 
-    box-shadow: var(--shadow-soft);
-    border-left: 4px solid var(--primary);
-    transition: transform 0.2s;
+    position: relative; 
+    background: white;
+    padding: 16px;
+    border-radius: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+    border-left: 5px solid var(--primary); 
+    cursor: pointer;
+    transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s;
+    overflow: hidden; 
 }
-.item-card:active { transform: scale(0.99); }
+.item-card:active { transform: scale(0.97); background-color: #FAFAFA; }
 
-/* Geser info agar tidak tertutup tombol di kanan atas */
-.item-info {
-    padding-right: 85px; /* Memberi ruang aman untuk tombol */
-}
-
+.item-info { width: 100%; padding-right: 80px; }
 .item-name { 
-    font-weight: 700; font-size: 15px; color: var(--text-dark);
-    margin-bottom: 8px; line-height: 1.4;
+    font-weight: 800; font-size: 15px; color: #111827;
+    margin-bottom: 4px; line-height: 1.3;
+    text-transform: uppercase;
+}
+.item-code {
+    font-size: 12px; font-weight: 600; color: #9CA3AF;
+    margin-bottom: 12px; font-family: monospace; letter-spacing: 0.5px;
 }
 
-/* --- TOMBOL AKSI (KANAN ATAS) --- */
-.action-group { 
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    display: flex;
-    gap: 8px;
+.bottom-row {
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px dashed #F3F4F6; padding-top: 10px; margin-top: 5px;
 }
 
-/* Tombol jadi Bulat & Proporsional */
-.btn-icon {
-    width: 34px; height: 34px; /* Ukuran pas untuk jari */
-    border-radius: 50%; /* Jadi bulat */
-    border: none; padding: 0;
-    cursor: pointer; font-size: 14px; 
+.big-price {
+    font-size: 20px; font-weight: 900; color: #111827; 
+    background: transparent; letter-spacing: -0.5px;
+}
+
+.stok-badge {
+    font-size: 12px; font-weight: 700;
+    padding: 6px 12px; border-radius: 8px;
+}
+.stok-aman { background: #ECFDF5; color: #047857; }
+.stok-habis { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+
+/* TOMBOL AKSI MELAYANG */
+.floating-actions {
+    position: absolute; top: 15px; right: 15px;
+    display: flex; gap: 8px; z-index: 10; 
+}
+.btn-float {
+    width: 34px; height: 34px;
+    border-radius: 10px; border: none; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s;
+    font-size: 14px; transition: 0.2s;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
-
-/* Warna Tombol Lebih Elegan */
-.btn-edit { 
-    background: #F0F9FF; color: #0284C7; /* Biru Langit Soft */
-}
-.btn-del { 
-    background: #FEF2F2; color: #EF4444; /* Merah Soft */
-}
-
-/* Efek Tekan */
-.btn-edit:active, .btn-del:active { 
-    transform: scale(0.9); filter: brightness(0.95);
-}
-.item-card:active { transform: scale(0.98); }
-.item-info { flex: 1; }
-.item-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
-.badge-price { background: #ECFDF5; color: #047857; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
-.badge-qty { background: #EFF6FF; color: #1D4ED8; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
-.item-desc { font-size: 11px; color: #9CA3AF; margin-top: 4px; }
+.btn-edit { background: #F0F9FF; color: #0284C7; }
+.btn-del  { background: #FEF2F2; color: #EF4444; }
+.btn-float:active { transform: scale(0.9); }
 
 /* --- MODAL --- */
 .modal-backdrop {
@@ -346,25 +342,163 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 /* --- INDIKATOR STOK HABIS --- */
 .badge-stok-aman {
-    background: #EFF6FF; color: #1D4ED8; /* Biru Soft */
+    background: #EFF6FF; color: #1D4ED8;
     padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;
 }
-
 .badge-stok-habis {
-    background: #FEF2F2; color: #DC2626; /* Merah Soft */
+    background: #FEF2F2; color: #DC2626;
     padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;
-    border: 1px solid #FCA5A5; /* Border merah tipis */
+    border: 1px solid #FCA5A5;
     display: inline-flex; align-items: center; gap: 4px;
 }
-
 .warning-blink {
     font-size: 10px; font-weight: 800; color: #DC2626;
     margin-left: 6px; text-transform: uppercase; letter-spacing: 0.5px;
     animation: pulseRed 2s infinite;
 }
-
 @keyframes pulseRed {
     0% { opacity: 1; }
     50% { opacity: 0.6; }
     100% { opacity: 1; }
+}
+
+/* --- DETAIL MODAL STYLES --- */
+.detail-group { margin-bottom: 12px; }
+.detail-group label { 
+    display: block; font-size: 11px; font-weight: 700; 
+    color: #9CA3AF; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.detail-value { 
+    font-size: 14px; color: #1F2937; background: #F9FAFB; 
+    padding: 12px; border-radius: 12px; border: 1px solid #E5E7EB; 
+    word-break: break-all;
+}
+.highlight-text { font-weight: 700; color: #111827; background: #fff; border-color: #D1D5DB; }
+.detail-row { display: flex; gap: 10px; }
+.detail-row .detail-group { flex: 1; }
+.detail-desc { 
+    min-height: 80px; line-height: 1.6; 
+    white-space: pre-wrap; 
+    background: #FFFBEB; border-color: #FCD34D; color: #92400E; 
+}
+.btn-view { background: #EEF2FF; color: #4F46E5; }
+.btn-view:active { transform: scale(0.9); background: #E0E7FF; }
+
+
+/* ========================================= */
+/* REVISI LAYOUT SCANNER (FIXED & PRESISI)  */
+/* ========================================= */
+
+/* 1. Wrapper Utama Scanner */
+.mini-scanner-box {
+    position: relative;
+    background: #000; /* Background hitam agar menyatu dengan video */
+    border-radius: 12px;
+    overflow: hidden; /* Penting: agar isi tidak luber keluar rounded corner */
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column; /* Susun elemen ke bawah */
+}
+
+/* 2. Container Library (Reader) */
+#reader-mini {
+    width: 100%;
+    border: none !important;
+    display: flex;
+    flex-direction: column; /* Paksa susunan vertikal */
+}
+
+/* 3. PAKSA POSISI VIDEO DI PALING ATAS */
+#reader-mini > div:first-child {
+    /* Biasanya ini adalah div wrapper video dari library */
+    order: 1 !important;
+    width: 100% !important;
+}
+#reader-mini video {
+    width: 100% !important;
+    object-fit: cover; /* Video memenuhi area tanpa gepeng */
+    border-radius: 0 !important; /* Biar nyatu sama box */
+    display: block; /* Hilangkan gap bawah video */
+}
+
+/* 4. TOMBOL MENU SCANNER (Stop / Scan Image) -> PINDAH KE BAWAH */
+#reader-mini__dashboard_section_csr {
+    order: 2 !important; /* Taruh di urutan ke-2 (Bawah Video) */
+    background: #fff; /* Area tombol putih */
+    padding: 10px;
+    border-top: 1px solid #eee;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Style Tombol STOP Bawaan Library */
+#reader-mini__dashboard_section_csr span button {
+    background-color: #FEF2F2 !important;
+    color: #DC2626 !important;
+    border: 1px solid #FECACA !important;
+    padding: 8px 20px !important;
+    border-radius: 50px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    cursor: pointer;
+    width: 100%; /* Full width agar rapi */
+}
+
+/* Style Link "Scan an Image File" */
+#reader-mini__dashboard_section_swaplink {
+    order: 3 !important; /* Paling Bawah */
+    background: #fff;
+    padding-bottom: 10px;
+    text-align: center;
+}
+#reader-mini__dashboard_section_swaplink a {
+    color: #6B7280 !important;
+    font-size: 12px !important;
+    text-decoration: none;
+    border-bottom: 1px dashed #ccc;
+}
+
+/* 5. FRAME GARIS PUTIH (REVISI POSISI) */
+/* Kita posisikan absolute relative terhadap .mini-scanner-box */
+.scan-frame-custom {
+    position: absolute;
+    /* Posisikan frame agak ke atas, menumpang di area VIDEO saja */
+    top: 35%; 
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    width: 70%;  /* Lebar frame */
+    height: 160px; /* Tinggi frame fix agar tidak gepeng */
+    z-index: 10;
+    pointer-events: none; /* Agar tembus klik */
+    
+    /* Gambar Siku Putih (CSS Gradient) */
+    background: 
+        linear-gradient(to right, #fff 4px, transparent 4px) 0 0,
+        linear-gradient(to bottom, #fff 4px, transparent 4px) 0 0,
+        linear-gradient(to left, #fff 4px, transparent 4px) 100% 0,
+        linear-gradient(to bottom, #fff 4px, transparent 4px) 100% 0,
+        linear-gradient(to right, #fff 4px, transparent 4px) 0 100%,
+        linear-gradient(to top, #fff 4px, transparent 4px) 0 100%,
+        linear-gradient(to left, #fff 4px, transparent 4px) 100% 100%,
+        linear-gradient(to top, #fff 4px, transparent 4px) 100% 100%;
+    
+    background-repeat: no-repeat;
+    background-size: 40px 40px; /* Panjang kaki siku */
+    
+    /* Shadow Gelap di Luar Frame (Fokus Effect) */
+    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5); 
+}
+
+/* Teks Hint di Bawah Frame (Sembunyikan karena sudah ada di input) */
+.mini-scanner-hint {
+    display: none; 
+}
+
+/* Sembunyikan border bawaan library */
+#reader-mini div[style*="border"] { 
+    border: none !important;
 }

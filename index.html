@@ -8,8 +8,8 @@
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -34,7 +34,6 @@
     <div class="main-content">
 
         <div id="view-scan" class="view-section">
-            
             <div class="tx-switch-container">
                 <input type="radio" id="mode-out" name="tx_mode" value="OUT" checked>
                 <label for="mode-out" class="switch-btn btn-out">KELUAR (Pakai)</label>
@@ -43,9 +42,7 @@
                 <label for="mode-in" class="switch-btn btn-in">MASUK (Restock)</label>
             </div>
 
-            <div id="scan-title" class="section-title">
-                ARAHKAN KAMERA
-            </div>
+            <div id="scan-title" class="section-title">ARAHKAN KAMERA</div>
             
             <div class="scanner-frame">
                 <div id="reader"></div>
@@ -62,12 +59,8 @@
             <div class="mutation-report-card">
                 <div class="card-header-small">DOWNLOAD MUTASI (Masuk/Keluar)</div>
                 <div class="button-row">
-                    <button class="btn-soft btn-green" onclick="downloadMutasi('EXCEL')">
-                        📊 Excel
-                    </button>
-                    <button class="btn-soft btn-red" onclick="downloadMutasi('PDF')">
-                        📄 PDF
-                    </button>
+                    <button class="btn-soft btn-green" onclick="downloadMutasi('EXCEL')">📊 Excel</button>
+                    <button class="btn-soft btn-red" onclick="downloadMutasi('PDF')">📄 PDF</button>
                 </div>
             </div>
 
@@ -92,6 +85,7 @@
 
                 <div id="input-camera-wrapper" class="mini-scanner-box">
                     <div id="reader-mini"></div>
+                    <div class="scan-frame-custom"></div>
                     <div class="mini-scanner-hint">Scan barcode barang</div>
                 </div>
 
@@ -185,13 +179,14 @@
             </div>
         </div>
 
-    </div> <div id="modal-qty" class="modal-backdrop">
+    </div> 
+    <div id="modal-qty" class="modal-backdrop">
         <div class="modal-content">
             <div class="modal-top">
                 <span id="modal-title">KONFIRMASI</span>
                 <button onclick="closeModal()" class="btn-close">&times;</button>
             </div>
-            
+
             <div class="modal-center">
                 <input type="text" id="tx-barcode" class="input-readonly-center" readonly>
                 
@@ -205,6 +200,45 @@
             </div>
 
             <button class="btn-block-primary" onclick="kirimTransaksi()">KIRIM</button>
+        </div>
+    </div>
+
+    <div id="modal-detail" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-top">
+                <span style="font-weight:800; color:var(--text-gray);">DETAIL BARANG</span>
+                <button onclick="closeDetailModal()" class="btn-close">&times;</button>
+            </div>
+            
+            <div class="modal-center" style="text-align:left;">
+                <div class="detail-group">
+                    <label>Barcode / Kode Part</label>
+                    <div id="det-barcode" class="detail-value copyable" onclick="copyText(this)">...</div>
+                </div>
+
+                <div class="detail-group">
+                    <label>Nama Barang</label>
+                    <div id="det-nama" class="detail-value highlight-text">...</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-group">
+                        <label>Harga Jual</label>
+                        <div id="det-harga" class="detail-value">...</div>
+                    </div>
+                     <div class="detail-group">
+                        <label>Stok</label>
+                        <div id="det-stok" class="detail-value">...</div>
+                    </div>
+                </div>
+
+                <div class="detail-group">
+                    <label>Keterangan / Deskripsi Lengkap</label>
+                    <div id="det-ket" class="detail-value detail-desc">...</div>
+                </div>
+            </div>
+
+            <button class="btn-block-primary" onclick="closeDetailModal()">TUTUP</button>
         </div>
     </div>
 

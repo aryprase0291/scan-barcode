@@ -408,50 +408,40 @@ function renderList(data) {
         container.innerHTML = `
             <div style="text-align:center; padding:40px; color:#9CA3AF;">
                 <div style="font-size:40px; margin-bottom:10px;">📦</div>
-                Data tidak ditemukan.
+                DATA TIDAK DITEMUKAN
             </div>`;
         return;
     }
 
     data.forEach(item => {
-        // Format Harga Dollar
+        // Format Harga
         let hargaFmt = new Intl.NumberFormat('en-US', { 
             style: 'currency', currency: 'USD', minimumFractionDigits: 0 
         }).format(item.harga || 0);
 
-        // --- LOGIKA STOK WARNING ---
+        // Logic Stok
         let stok = item.stok || 0;
-        let stokBadgeClass = "badge-stok-aman"; // Default Biru (Aman)
-        let stokWarningText = ""; 
+        let stokClass = stok < 1 ? "stok-habis" : "stok-aman";
+        let stokText = stok < 1 ? "⚠️ HABIS" : `Stok: ${stok} ${item.satuan}`;
 
-        // Jika Stok Kurang dari 1 (0 atau minus)
-        if (stok < 1) {
-            stokBadgeClass = "badge-stok-habis"; // Jadi Merah
-            stokWarningText = `<span class="warning-blink">⚠️ HABIS!</span>`;
-        }
-        // ---------------------------
-
+        // RENDER KARTU
+        // Perhatikan: onclick di div utama untuk View Detail
         container.innerHTML += `
-            <div class="item-card">
+            <div class="item-card" onclick="viewItem('${item.barcode}')">
+                
+                <div class="floating-actions">
+                    <button class="btn-float btn-edit" onclick="event.stopPropagation(); editItem('${item.barcode}')">✏️</button>
+                    <button class="btn-float btn-del" onclick="event.stopPropagation(); deleteItem('${item.barcode}', '${item.nama}')">🗑️</button>
+                </div>
+
                 <div class="item-info">
                     <div class="item-name">${item.nama}</div>
-                    
-                    <div style="margin-bottom:6px; display:flex; align-items:center;">
-                        <span class="badge-price">${hargaFmt}</span>
-                        
-                        <span class="${stokBadgeClass}">
-                            Stok: ${stok} ${item.satuan}
-                        </span>
-                        
-                        ${stokWarningText}
-                    </div>
-                    
-                    <div class="item-desc">${item.barcode} | ${item.keterangan || "-"}</div>
+                    <div class="item-code">${item.barcode}</div>
                 </div>
-                
-                <div class="action-group">
-                    <button class="btn-icon btn-edit" onclick="editItem('${item.barcode}')">✏️</button>
-                    <button class="btn-icon btn-del" onclick="deleteItem('${item.barcode}', '${item.nama}')">🗑️</button>
+
+                <div class="bottom-row">
+                    <div class="big-price">${hargaFmt}</div>
+                    <div class="${stokClass} stok-badge">${stokText}</div>
                 </div>
             </div>`;
     });
@@ -782,4 +772,45 @@ async function downloadMutasi(format) {
         console.error(e);
         showToast("Gagal: " + e.message);
     }
+}
+
+// ============================================================================
+// MODUL VIEW DETAIL
+// ============================================================================
+function viewItem(barcode) {
+    // Cari data berdasarkan barcode
+    const item = masterData.find(i => i.barcode === barcode);
+    if(!item) return;
+
+    // Isi Data ke Modal
+    document.getElementById('det-barcode').innerText = item.barcode;
+    document.getElementById('det-nama').innerText = item.nama;
+    
+    // Format Harga
+    let hargaFmt = new Intl.NumberFormat('en-US', { 
+            style: 'currency', currency: 'USD', minimumFractionDigits: 0 
+    }).format(item.harga || 0);
+    document.getElementById('det-harga').innerText = hargaFmt;
+    
+    // Format Stok
+    let stok = item.stok || 0;
+    document.getElementById('det-stok').innerText = stok + ' ' + item.satuan;
+    
+    // Keterangan (Default strip jika kosong)
+    document.getElementById('det-ket').innerText = item.keterangan || "-";
+
+    // Tampilkan Modal
+    document.getElementById('modal-detail').style.display = 'flex';
+}
+
+function closeDetailModal() {
+    document.getElementById('modal-detail').style.display = 'none';
+}
+
+// Fitur Copy Text saat barcode diklik (Opsional, biar keren)
+function copyText(element) {
+    const text = element.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        showToast("Teks disalin!");
+    });
 }
