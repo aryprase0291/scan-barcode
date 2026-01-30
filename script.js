@@ -256,22 +256,24 @@ function tarikLaporan() {
 }
 
 // ============================================================================
-// LOGIC INPUT MASTER (TOGGLE KAMERA & FORM)
+// LOGIC INPUT MASTER (AUTO OFF & FOCUS)
 // ============================================================================
 let miniScanner = null;
 
 function toggleCameraInput() {
-    const isCameraOn = document.getElementById('chk-camera').checked;
+    const chk = document.getElementById('chk-camera');
+    const isCameraOn = chk.checked;
     const barcodeInput = document.getElementById('inp_barcode');
 
     if (isCameraOn) {
+        // --- MODE KAMERA ON ---
         document.getElementById('input-camera-wrapper').style.display = 'block';
         barcodeInput.readOnly = true;
         barcodeInput.placeholder = "Menunggu Scan...";
         
         if (!miniScanner) {
             const formats = [ 
-                Html5QrcodeSupportedFormats.PDF_417,  // PRIORITAS UTAMA (Honda)
+                Html5QrcodeSupportedFormats.PDF_417,  // Prioritas Honda
                 Html5QrcodeSupportedFormats.CODE_128, 
                 Html5QrcodeSupportedFormats.QR_CODE 
             ];
@@ -280,43 +282,61 @@ function toggleCameraInput() {
                 "reader-mini", 
                 { 
                     fps: 30, 
-                    // Kotak Scan logic (Hanya untuk logic, visualnya pakai CSS kita tadi)
+                    // Visual Kotak Scan (Logic Only)
                     qrbox: function(viewfinderWidth, viewfinderHeight) {
                         let width = Math.floor(viewfinderWidth * 0.8);
                         return { width: width, height: Math.floor(width * 0.45) };
                     },
                     formatsToSupport: formats,
-                    
-                    // AKTIFKAN DETEKTOR BAWAAN HP (Biasanya lebih jago baca PDF417)
                     experimentalFeatures: { useBarCodeDetectorIfSupported: true },
                     
-                    // RESOLUSI TINGGI (PENTING UNTUK HONDA)
+                    // Resolusi Tinggi (Full HD) untuk ketajaman baca
                     videoConstraints: {
                         facingMode: "environment",
-                        // Minta resolusi Full HD agar tajam
                         width: { min: 1280, ideal: 1920 }, 
                         height: { min: 720, ideal: 1080 },
-                        focusMode: "continuous" // Paksa fokus terus
+                        focusMode: "continuous"
                     }
                 }, 
                 false
             );
 
+            // --- CALLBACK SAAT SCAN BERHASIL (UPDATE DISINI) ---
             miniScanner.render((decodedText) => {
+                // 1. Isi Barcode
                 document.getElementById('inp_barcode').value = decodedText;
                 showToast("Barcode Terisi!");
                 if (window.navigator.vibrate) window.navigator.vibrate(200);
-            }, (error) => {
-                // Abaikan error scanning frame kosong
-            });
+                
+                // 2. MATIKAN KAMERA OTOMATIS
+                chk.checked = false; // Matikan switch visual
+                toggleCameraInput(); // Panggil fungsi ini lagi untuk eksekusi shutdown kamera
+                
+                // 3. PINDAH FOKUS KE NAMA BARANG
+                // Beri jeda 300ms agar animasi tutup kamera selesai dulu
+                setTimeout(() => {
+                    const inputNama = document.getElementById('inp_nama');
+                    inputNama.focus(); 
+                    // Opsional: Scroll agar input nama pas di tengah layar
+                    inputNama.scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 300);
+
+            }, (error) => {});
         }
     } else {
+        // --- MODE KAMERA OFF (MANUAL) ---
         document.getElementById('input-camera-wrapper').style.display = 'none';
         barcodeInput.readOnly = false;
         barcodeInput.placeholder = "Ketik Barcode Manual...";
         
+        // Logic Matikan & Hapus Scanner dari Memori
         if (miniScanner) {
-            miniScanner.clear().then(() => { miniScanner = null; }).catch(()=>{ miniScanner = null; });
+            miniScanner.clear().then(() => {
+                miniScanner = null;
+            }).catch((err) => {
+                console.error("Gagal stop scanner", err);
+                miniScanner = null;
+            });
         }
     }
 }
