@@ -391,33 +391,53 @@ function deleteItem(barcode, nama) {
 function renderList(data) {
     const container = document.getElementById('list-content');
     container.innerHTML = "";
+    
     if(data.length === 0) {
-        container.innerHTML = "<p style='text-align:center; color:#999'>Tidak ada data.</p>";
+        container.innerHTML = `
+            <div style="text-align:center; padding:40px; color:#9CA3AF;">
+                <div style="font-size:40px; margin-bottom:10px;">📦</div>
+                Data tidak ditemukan.
+            </div>`;
         return;
     }
+
     data.forEach(item => {
-        // KOREKSI DISINI: Ubah ke format USD ($)
-        // en-US akan mengubah format jadi $10,000 (pakai koma)
-        let hargaDolar = new Intl.NumberFormat('en-US', { 
-            style: 'currency', 
-            currency: 'USD', 
-            minimumFractionDigits: 0 
+        // Format Harga Dollar
+        let hargaFmt = new Intl.NumberFormat('en-US', { 
+            style: 'currency', currency: 'USD', minimumFractionDigits: 0 
         }).format(item.harga || 0);
 
-        // Default Stok 0 jika kosong
+        // --- LOGIKA STOK WARNING ---
         let stok = item.stok || 0;
+        let stokBadgeClass = "badge-stok-aman"; // Default Biru (Aman)
+        let stokWarningText = ""; 
+
+        // Jika Stok Kurang dari 1 (0 atau minus)
+        if (stok < 1) {
+            stokBadgeClass = "badge-stok-habis"; // Jadi Merah
+            stokWarningText = `<span class="warning-blink">⚠️ HABIS!</span>`;
+        }
+        // ---------------------------
 
         container.innerHTML += `
             <div class="item-card">
                 <div class="item-info">
                     <div class="item-name">${item.nama}</div>
-                    <div style="margin-bottom:5px;">
-                        <span class="badge-price">${hargaDolar}</span>
-                        <span class="badge-qty">Stok: ${stok} ${item.satuan}</span>
+                    
+                    <div style="margin-bottom:6px; display:flex; align-items:center;">
+                        <span class="badge-price">${hargaFmt}</span>
+                        
+                        <span class="${stokBadgeClass}">
+                            Stok: ${stok} ${item.satuan}
+                        </span>
+                        
+                        ${stokWarningText}
                     </div>
-                    <div class="item-desc">${item.barcode} | ${item.keterangan}</div>
+                    
+                    <div class="item-desc">${item.barcode} | ${item.keterangan || "-"}</div>
                 </div>
-                 <div class="action-group">
+                
+                <div class="action-group">
                     <button class="btn-icon btn-edit" onclick="editItem('${item.barcode}')">✏️</button>
                     <button class="btn-icon btn-del" onclick="deleteItem('${item.barcode}', '${item.nama}')">🗑️</button>
                 </div>

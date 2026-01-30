@@ -1,216 +1,215 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AHM System v6</title>
+    
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AHM System</title>
-    
-    <link rel="stylesheet" href="style.css">
     
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="navbar">
-        <div class="brand">AHM SYSTEM</div>
-        <div class="version-badge">v6.0 PRO</div>
+        <div class="brand">
+            <span style="color:var(--primary)">AHM</span> SYSTEM
+        </div>
+        <div class="version-badge">PRO v6.2</div>
     </div>
 
-    <div class="menu-container" style="overflow-x: auto; justify-content: flex-start;">
-        <button class="menu-btn active" onclick="setMode('scan')">Sparepart</button>
-        <button class="menu-btn" onclick="setMode('unit')">Scan Unit</button>
-        <button class="menu-btn" onclick="setMode('master')">Input</button>
-        <button class="menu-btn" onclick="setMode('view')">Stok</button>
-        <button class="menu-btn" onclick="setMode('laporan')">Laporan</button>
+    <div class="menu-wrapper">
+        <div class="menu-container">
+            <button class="menu-btn active" onclick="setMode('scan')">Sparepart</button>
+            <button class="menu-btn" onclick="setMode('unit')">Unit</button>
+            <button class="menu-btn" onclick="setMode('master')">Input</button>
+            <button class="menu-btn" onclick="setMode('view')">Stok</button>
+            <button class="menu-btn" onclick="setMode('laporan')">Laporan</button>
+        </div>
     </div>
 
-    <div id="view-scan" class="scanner-wrapper">
-        
-        <div class="tx-switch-container">
-            <input type="radio" id="mode-out" name="tx_mode" value="OUT" checked>
-            <label for="mode-out" class="switch-btn btn-out">KELUAR (Pakai)</label>
+    <div class="main-content">
+
+        <div id="view-scan" class="view-section">
             
-            <input type="radio" id="mode-in" name="tx_mode" value="IN">
-            <label for="mode-in" class="switch-btn btn-in">MASUK (Restock)</label>
-        </div>
-
-        <div id="scan-title" style="text-align:center; margin:10px 0; font-weight:bold; color:#666;">
-            ARAHKAN KAMERA KE BARCODE
-        </div>
-        
-        <div id="reader"></div>
-
-        <div class="manual-input-wrapper">
-            <div style="text-align:center; margin: 10px 0; font-size: 12px; color:#999;">
-                — ATAU KETIK KODE —
-            </div>
-            <div style="display:flex; gap:8px;">
-                <input type="text" id="manual-barcode" class="input-field" placeholder="Ketik kode part..." style="margin-bottom:0;">
-                <button class="btn-primary" onclick="prosesManual()" style="width:auto; margin-top:0; padding:0 20px;">OK</button>
-            </div>
-        </div>
-
-        </div>
-
-        </div>
-
-        <div style="margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px;">
-            <div style="font-size:12px; font-weight:bold; color:#666; margin-bottom:8px; text-align:center;">
-                LAPORAN MUTASI STOK (KELUAR/MASUK)
-            </div>
-            <div style="display:flex; gap:10px;">
-                <button class="btn-download btn-excel" onclick="downloadMutasi('EXCEL')">
-                    📥 Excel
-                </button>
-                <button class="btn-download btn-pdf" onclick="downloadMutasi('PDF')">
-                    📄 PDF
-                </button>
-            </div>
-        </div>
-
-        <div id="overlay-success" class="scan-overlay">
-
-        <div id="overlay-success" class="scan-overlay">
-            <div class="check-icon">✅</div>
-            <div style="font-weight: bold; font-size: 18px; color: #10b981;">DATA TERKIRIM</div>
-        </div>
-    </div>
-
-    <div id="modal-qty" class="modal-overlay">
-        <div class="modal-card">
-            <div class="modal-header">
-                <span id="modal-title">KONFIRMASI TRANSAKSI</span>
-                <button onclick="closeModal()" style="background:none; border:none; font-size:20px;">&times;</button>
-            </div>
-            
-            <div class="modal-body">
-                <div class="form-group">
-                    <span class="label">Barcode</span>
-                    <input type="text" id="tx-barcode" class="input-field input-readonly" readonly>
-                </div>
+            <div class="tx-switch-container">
+                <input type="radio" id="mode-out" name="tx_mode" value="OUT" checked>
+                <label for="mode-out" class="switch-btn btn-out">KELUAR (Pakai)</label>
                 
-                <div class="form-group">
-                    <span class="label">Jumlah (Qty)</span>
-                    <div style="display:flex; gap:10px;">
-                        <button type="button" class="btn-qty" onclick="adjustQty(-1)">-</button>
-                        <input type="number" id="tx-qty" class="input-field" value="1" style="text-align:center; font-weight:bold;">
-                        <button type="button" class="btn-qty" onclick="adjustQty(1)">+</button>
+                <input type="radio" id="mode-in" name="tx_mode" value="IN">
+                <label for="mode-in" class="switch-btn btn-in">MASUK (Restock)</label>
+            </div>
+
+            <div id="scan-title" class="section-title">
+                ARAHKAN KAMERA
+            </div>
+            
+            <div class="scanner-frame">
+                <div id="reader"></div>
+            </div>
+
+            <div class="manual-input-wrapper">
+                <div class="separator-text">— ATAU KETIK KODE —</div>
+                <div class="input-group-row">
+                    <input type="text" id="manual-barcode" class="input-modern" placeholder="Ketik kode part..." autocomplete="off">
+                    <button class="btn-icon-only" onclick="prosesManual()">➔</button>
+                </div>
+            </div>
+
+            <div class="mutation-report-card">
+                <div class="card-header-small">DOWNLOAD MUTASI (Masuk/Keluar)</div>
+                <div class="button-row">
+                    <button class="btn-soft btn-green" onclick="downloadMutasi('EXCEL')">
+                        📊 Excel
+                    </button>
+                    <button class="btn-soft btn-red" onclick="downloadMutasi('PDF')">
+                        📄 PDF
+                    </button>
+                </div>
+            </div>
+
+            <div id="overlay-success" class="scan-overlay">
+                <div class="check-circle">✓</div>
+                <div class="success-text">BERHASIL!</div>
+            </div>
+        </div>
+
+        <div id="view-form" class="view-section" style="display:none;">
+            <div class="card-modern">
+                <div id="form-title" class="card-title">INPUT PART BARU</div>
+                <input type="hidden" id="edit_mode" value="false">
+
+                <div class="toggle-row">
+                    <span>Gunakan Scanner</span>
+                    <label class="switch">
+                        <input type="checkbox" id="chk-camera" checked onchange="toggleCameraInput()">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div id="input-camera-wrapper" class="mini-scanner-box">
+                    <div id="reader-mini"></div>
+                    <div class="mini-scanner-hint">Scan barcode barang</div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Barcode</label>
+                        <input type="text" id="inp_barcode" class="input-modern" placeholder="Scan / Ketik...">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Nama Barang</label>
+                        <input type="text" id="inp_nama" class="input-modern" placeholder="Contoh: Oli MPX2">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Harga Jual ($)</label>
+                        <input type="number" id="inp_harga" class="input-modern" placeholder="0">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Satuan</label>
+                        <div class="select-wrapper">
+                            <select id="inp_satuan" class="input-modern">
+                                <option value="PCS">PCS</option>
+                                <option value="SET">SET</option>
+                                <option value="BOTOL">BOTOL</option>
+                                <option value="UNIT">UNIT</option>
+                                <option value="LITER">LITER</option>
+                                <option value="DUS">DUS</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Keterangan</label>
+                        <input type="text" id="inp_ket" class="input-modern" placeholder="Opsional...">
+                    </div>
+                </div>
+
+                <button id="btn-submit" class="btn-block-primary" onclick="simpanData()">SIMPAN DATA</button>
+            </div>
+        </div>
+
+        <div id="view-list" class="view-section" style="display:none;">
+            <div class="search-bar-sticky">
+                <input type="text" id="search-input" class="search-input-lg" placeholder="🔍 Cari Barang..." onkeyup="filterList()">
+            </div>
+            
+            <div class="download-chips">
+                <button class="chip-btn excel" onclick="downloadExcel()">📥 Unduh Excel</button>
+                <button class="chip-btn pdf" onclick="downloadPDF()">📄 Unduh PDF</button>
+            </div>
+
+            <div id="list-loader" class="loader">Loading...</div>
+            <div id="list-content" class="list-wrapper"></div>
+        </div>
+
+        <div id="view-laporan" class="view-section" style="display:none;">
+            <div class="card-modern">
+                <div class="card-title">LAPORAN UNIT</div>
+                
+                <div class="date-range-box">
+                    <div class="date-field">
+                        <label>Dari</label>
+                        <input type="date" id="date-start" class="input-modern">
+                    </div>
+                    <div class="date-field">
+                        <label>Sampai</label>
+                        <input type="date" id="date-end" class="input-modern">
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <span class="label">Keterangan (Opsional)</span>
-                    <input type="text" id="tx-ket" class="input-field" placeholder="Contoh: Service NMAX B 1234...">
+                <button class="btn-block-primary" onclick="tarikLaporan()">TARIK DATA</button>
+                
+                <div id="report-result" style="display:none; margin-top:20px;">
+                    <div class="summary-box">
+                        <div class="summary-label">TOTAL UNIT</div>
+                        <div id="total-unit" class="summary-val">0</div>
+                    </div>
+                    
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th>Tipe / Barcode</th>
+                                <th style="text-align:right;">Jml</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-body"></tbody>
+                    </table>
                 </div>
-
-                <button class="btn-primary" onclick="kirimTransaksi()">KIRIM DATA</button>
             </div>
         </div>
-    </div>
 
-    <div id="view-form" class="form-card">
-        <div id="form-title" style="text-align:center; margin-bottom:20px; font-weight:800; font-size:18px;">INPUT PART BARU</div>
-        <input type="hidden" id="edit_mode" value="false">
-
-        <div class="toggle-container">
-            <span class="toggle-label">Gunakan Kamera Scanner</span>
-            <label class="switch">
-                <input type="checkbox" id="chk-camera" checked onchange="toggleCameraInput()">
-                <span class="slider"></span>
-            </label>
-        </div>
-
-        <div id="input-camera-wrapper" style="margin-bottom: 15px;">
-            <div id="reader-mini" style="width:100%; border-radius:8px; overflow:hidden;"></div>
-            <div style="font-size:11px; text-align:center; color:#666; margin-top:5px;">Arahkan ke barcode</div>
-        </div>
-
-        <div class="form-group">
-            <span class="label">Barcode</span>
-            <input type="text" id="inp_barcode" class="input-field" placeholder="Scan atau Ketik Manual...">
-        </div>
-        
-        <div class="form-group">
-            <span class="label">Nama Sparepart</span>
-            <input type="text" id="inp_nama" class="input-field">
-        </div>
-
-        <div class="form-group">
-            <span class="label">Harga Jual ($)</span>
-            <input type="number" id="inp_harga" class="input-field" placeholder="0">
-        </div>
-
-        <div class="form-group">
-            <span class="label">Satuan</span>
-            <select id="inp_satuan" class="input-field">
-                <option value="PCS">PCS</option>
-                <option value="SET">SET</option>
-                <option value="BOTOL">BOTOL</option>
-                <option value="UNIT">UNIT</option>
-                <option value="LITER">LITER</option>
-                <option value="DUS">DUS</option>
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <span class="label">Keterangan / Deskripsi</span>
-            <input type="text" id="inp_ket" class="input-field">
-        </div>
-
-        <button id="btn-submit" class="btn-primary" onclick="simpanData()">SIMPAN</button>
-    </div>
-
-    <div id="view-list" class="list-container">
-        <input type="text" id="search-input" class="search-box" placeholder="Cari nama atau barcode..." onkeyup="filterList()">
-        
-        <div class="download-bar">
-            <button class="btn-download btn-excel" onclick="downloadExcel()">
-                📥 Excel
-            </button>
-            <button class="btn-download btn-pdf" onclick="downloadPDF()">
-                📄 PDF
-            </button>
-        </div>
-        <div id="list-loader" class="list-loader">Mengambil data...</div>
-        <div id="list-content"></div>
-    </div>
-
-    <div id="view-laporan" class="report-container">
-        <div style="text-align:center; font-weight:800; margin-bottom:15px;">LAPORAN SCAN UNIT</div>
-        
-        <div class="date-group">
-            <input type="date" id="date-start" class="date-input">
-            <input type="date" id="date-end" class="date-input">
-        </div>
-        
-        <button class="btn-primary" onclick="tarikLaporan()">TARIK DATA</button>
-        
-        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
-
-        <div id="report-result" style="display:none;">
-            <div class="report-summary">
-                <span style="font-size:12px; color:#666;">TOTAL UNIT TER-SCAN</span>
-                <span id="total-unit" class="big-number">0</span>
+    </div> <div id="modal-qty" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-top">
+                <span id="modal-title">KONFIRMASI</span>
+                <button onclick="closeModal()" class="btn-close">&times;</button>
             </div>
             
-            <table class="report-table">
-                <thead>
-                    <tr>
-                        <th>Tipe / Barcode</th>
-                        <th style="text-align:right;">Jml</th>
-                    </tr>
-                </thead>
-                <tbody id="report-body"></tbody>
-            </table>
+            <div class="modal-center">
+                <input type="text" id="tx-barcode" class="input-readonly-center" readonly>
+                
+                <div class="qty-control">
+                    <button class="btn-circle" onclick="adjustQty(-1)">−</button>
+                    <input type="number" id="tx-qty" value="1">
+                    <button class="btn-circle" onclick="adjustQty(1)">+</button>
+                </div>
+                
+                <input type="text" id="tx-ket" class="input-modern" placeholder="Catatan (Opsional)..." style="text-align:center;">
+            </div>
+
+            <button class="btn-block-primary" onclick="kirimTransaksi()">KIRIM</button>
         </div>
     </div>
 
-    <div id="toast">Loading...</div>
+    <div id="toast">Notifikasi</div>
 
     <script src="script.js"></script>
-
 </body>
 </html>
