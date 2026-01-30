@@ -2,7 +2,7 @@
 // KONFIGURASI BACKEND
 // ============================================================================
 // Ganti URL di bawah ini setiap kali Anda melakukan Deploy Baru (New Version)
-const API_URL = "https://script.google.com/macros/s/AKfycbzYchXTRCGPXHZbzmIi1hjqHbu_7rjbuXSaY3fd9vVZrKYzvyU1G97_2G1hTKFT1MOw/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbwesE4wgjaycp8auj_FrtrjhPwfXZIWPImEbbomCEXUWyaDcc37_kUxjVQ2pURFnP-MeQ/exec"; 
 
 // ============================================================================
 // GLOBAL VARIABLES
@@ -189,9 +189,22 @@ function kirimData(json) {
 // AMBIL DATA MASTER (GET)
 function loadMasterData() {
     document.getElementById('list-loader').style.display = 'block';
+    
     fetch(`${API_URL}?action=read_master`)
     .then(res => res.json())
     .then(data => {
+        // --- TAMBAHAN BARU: SORTING A-Z ---
+        // Kita urutkan data berdasarkan 'nama' sebelum disimpan ke masterData
+        data.sort((a, b) => {
+            // Gunakan toLowerCase agar huruf besar/kecil tidak berpengaruh
+            let namaA = a.nama.toLowerCase();
+            let namaB = b.nama.toLowerCase();
+            if (namaA < namaB) return -1;
+            if (namaA > namaB) return 1;
+            return 0;
+        });
+        // ----------------------------------
+
         masterData = data; 
         renderList(data);
         document.getElementById('list-loader').style.display = 'none';
@@ -626,4 +639,115 @@ function downloadPDF() {
     });
 
     doc.save(`Laporan_Stok_${tanggal}.pdf`);
+}
+
+// ============================================================================
+// MODUL LAPORAN MUTASI (GABUNGAN SATU TABEL)
+// ============================================================================
+async function downloadMutasi(format) {
+    showToast("Menyiapkan Data Laporan...", true);
+
+    try {
+        // 1. Ambil Data Master (Untuk Lookup Nama Barang)
+        let resMaster = await fetch(`${API_URL}?action=read_master`);
+        let dataMaster = await resMaster.json();
+        
+        // Buat Kamus Nama (Barcode -> Nama) biar pencarian cepat
+        let mapNama = {};
+        dataMaster.forEach(m => mapNama[m.barcode] = m.nama);
+
+        // 2. Ambil Data Log Transaksi
+        let resLog = await fetch(`${API_URL}?action=read_log`);
+        let dataLog = await resLog.json();
+
+        if(!dataLog || dataLog.length === 0) {
+            showToast("Belum ada riwayat transaksi."); return;
+        }
+
+        // 3. Olah Data (Gabung & Sortir)
+        // Urutkan dari yang terbaru (Descending)
+        dataLog.sort((a,b) => new Date(b.waktu) - new Date(a.waktu));
+
+        const processedData = dataLog.map(item => {
+            return {
+                tanggal: new Date(item.waktu).toLocaleDateString('id-ID'),
+                jam: new Date(item.waktu).toLocaleTimeString('id-ID'),
+                barcode: item.barcode,
+                nama: mapNama[item.barcode] || "(Item Dihapus)", // Ambil nama dari master
+                // KUNCI PERUBAHAN: Pisahkan kolom Masuk & Keluar
+                masuk: item.jenis === 'IN' ? item.qty : 0,
+                keluar: item.jenis === 'OUT' ? item.qty : 0,
+                ket: item.ket
+            };
+        });
+
+        // 4. Generate File Sesuai Format
+        const tglCetak = new Date().toLocaleDateString('id-ID').replace(/\//g, '-');
+        const judulFile = `MUTASI_STOK_${tglCetak}`;
+
+        if (format === 'EXCEL') {
+            // --- EXCEL ---
+            const dataExport = processedData.map(item => ({
+                "Tanggal": item.tanggal,
+                "Jam": item.jam,
+                "Barcode": item.barcode,
+                "Nama Barang": item.nama,
+                "Masuk": item.masuk,   // Kolom Terpisah
+                "Keluar": item.keluar, // Kolom Terpisah
+                "Keterangan": item.ket
+            }));
+            
+            const ws = XLSX.utils.json_to_sheet(dataExport);
+            // Atur lebar kolom
+            ws['!cols'] = [
+                {wch: 12}, {wch: 10}, {wch: 15}, {wch: 30}, 
+                {wch: 8}, {wch: 8}, {wch: 25}
+            ];
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Mutasi Stok");
+            XLSX.writeFile(wb, `${judulFile}.xlsx`);
+
+        } else {
+            // --- PDF (Landscape) ---
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: "landscape" });
+
+            doc.setFontSize(16);
+            doc.text("LAPORAN MUTASI STOK (KELUAR/MASUK)", 148, 15, { align: "center" });
+            doc.setFontSize(10);
+            doc.text(`Dicetak: ${new Date().toLocaleString('id-ID')}`, 148, 22, { align: "center" });
+
+            const tableRows = processedData.map(item => [
+                item.tanggal + "\n" + item.jam, // Gabung tgl jam biar hemat kolom
+                item.barcode,
+                item.nama,
+                item.masuk > 0 ? item.masuk : "-", // Tampilkan strip jika 0
+                item.keluar > 0 ? item.keluar : "-",
+                item.ket
+            ]);
+
+            doc.autoTable({
+                head: [["Waktu", "Barcode", "Nama Barang", "Masuk", "Keluar", "Keterangan"]],
+                body: tableRows,
+                startY: 30,
+                theme: 'grid',
+                headStyles: { fillColor: [50, 50, 50], halign: 'center' }, // Header Abu Gelap
+                columnStyles: {
+                    0: { cellWidth: 25 },
+                    1: { cellWidth: 35 },
+                    2: { cellWidth: 80 }, // Nama Barang Lebar
+                    3: { cellWidth: 20, halign: 'center', textColor: [0, 150, 0], fontStyle: 'bold' }, // Masuk (Hijau)
+                    4: { cellWidth: 20, halign: 'center', textColor: [200, 0, 0], fontStyle: 'bold' }, // Keluar (Merah)
+                    5: { cellWidth: 'auto' }
+                }
+            });
+            doc.save(`${judulFile}.pdf`);
+        }
+
+        showToast("Download Selesai!");
+
+    } catch(e) {
+        console.error(e);
+        showToast("Gagal: " + e.message);
+    }
 }
