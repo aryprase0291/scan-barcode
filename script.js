@@ -78,41 +78,47 @@ function setMode(mode) {
 
 
 // ============================================================================
-// LOGIKA SCANNER UTAMA (MODE WIDE & HIGH DENSITY)
+// LOGIKA SCANNER UTAMA (PERFORMA TINGGI)
 // ============================================================================
 function initMainScanner() {
-    // TAMBAHKAN PDF_417 ke dalam daftar format!
+    // HANYA aktifkan format yang benar-benar dipakai agar scanning Cepat!
     const formats = [ 
-        Html5QrcodeSupportedFormats.PDF_417,  // <--- WAJIB ADA untuk Sparepart Honda
-        Html5QrcodeSupportedFormats.CODE_128, 
-        Html5QrcodeSupportedFormats.CODE_39,
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.QR_CODE 
+        Html5QrcodeSupportedFormats.CODE_128, // Barcode Garis (Paling Sering)
+        Html5QrcodeSupportedFormats.PDF_417,  // Barcode Bintik (Honda)
+        Html5QrcodeSupportedFormats.QR_CODE   // Barcode Unit
     ];
 
     if(!html5QrcodeScanner) {
         html5QrcodeScanner = new Html5QrcodeScanner(
             "reader", 
             { 
-                fps: 30, 
-                // Pertahankan rasio Wide (Gepeng) karena PDF417 Honda juga memanjang
+                fps: 30, // Frame per detik tinggi agar mulus
+                
+                // Ukuran Kotak Scan (Proporsional)
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    let minEdgePercentage = 0.90; 
+                    let minEdgePercentage = 0.85; 
                     let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
                     let qrboxWidth = Math.floor(minEdgeSize * minEdgePercentage);
                     return {
                         width: qrboxWidth,
-                        height: Math.floor(qrboxWidth * 0.45) 
+                        height: Math.floor(qrboxWidth * 0.50) // Tinggi 50%
                     };
                 },
+                
                 formatsToSupport: formats, 
-                experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+                
+                // MATIKAN Experimental Features agar lebih stabil di semua HP
+                experimentalFeatures: { useBarCodeDetectorIfSupported: false },
+                
+                // Config Kamera: Prioritaskan FRAME RATE daripada Resolusi Raksasa
                 videoConstraints: {
                     facingMode: "environment",
-                    focusMode: "continuous",
-                    width: { min: 1024, ideal: 1920 }, // Resolusi tinggi bantu PDF417
-                    height: { min: 768, ideal: 1080 } 
-                }
+                    // Gunakan HD (1280x720) saja. Ini Sweet Spot (Cepat & Cukup Tajam)
+                    width: { ideal: 1280 }, 
+                    height: { ideal: 720 },
+                    focusMode: "continuous" // Paksa autofocus
+                },
+                aspectRatio: 1.0
             }, 
             false
         );
@@ -257,74 +263,60 @@ let miniScanner = null;
 function toggleCameraInput() {
     const isCameraOn = document.getElementById('chk-camera').checked;
     const barcodeInput = document.getElementById('inp_barcode');
-    
+
     if (isCameraOn) {
-        // Mode Kamera ON
         document.getElementById('input-camera-wrapper').style.display = 'block';
         barcodeInput.readOnly = true;
         barcodeInput.placeholder = "Menunggu Scan...";
         
-        // Init Scanner Kecil jika belum ada
         if (!miniScanner) {
-            // Config Formats (Sama dengan Main Scanner)
             const formats = [ 
+                Html5QrcodeSupportedFormats.PDF_417,  // PRIORITAS UTAMA (Honda)
                 Html5QrcodeSupportedFormats.CODE_128, 
-                Html5QrcodeSupportedFormats.CODE_39, 
-                Html5QrcodeSupportedFormats.EAN_13,
                 Html5QrcodeSupportedFormats.QR_CODE 
             ];
 
             miniScanner = new Html5QrcodeScanner(
                 "reader-mini", 
                 { 
-                    fps: 30, // Scan lebih cepat (sebelumnya 10)
-                    
-                    // KOREKSI PROPORSI: Ubah jadi Wide (Persegi Panjang)
+                    fps: 30, 
+                    // Kotak Scan logic (Hanya untuk logic, visualnya pakai CSS kita tadi)
                     qrbox: function(viewfinderWidth, viewfinderHeight) {
-                        // Gunakan 90% lebar container karena areanya sempit
-                        let minEdgePercentage = 0.90; 
-                        let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-                        let qrboxWidth = Math.floor(minEdgeSize * minEdgePercentage);
-                        
-                        return {
-                            width: qrboxWidth,
-                            height: Math.floor(qrboxWidth * 0.45) // Tinggi 45% dari lebar
-                        };
+                        let width = Math.floor(viewfinderWidth * 0.8);
+                        return { width: width, height: Math.floor(width * 0.45) };
                     },
-                    
                     formatsToSupport: formats,
+                    
+                    // AKTIFKAN DETEKTOR BAWAAN HP (Biasanya lebih jago baca PDF417)
                     experimentalFeatures: { useBarCodeDetectorIfSupported: true },
                     
-                    // Paksa Fokus Kamera Belakang
+                    // RESOLUSI TINGGI (PENTING UNTUK HONDA)
                     videoConstraints: {
                         facingMode: "environment",
-                        focusMode: "continuous" 
+                        // Minta resolusi Full HD agar tajam
+                        width: { min: 1280, ideal: 1920 }, 
+                        height: { min: 720, ideal: 1080 },
+                        focusMode: "continuous" // Paksa fokus terus
                     }
                 }, 
                 false
             );
 
             miniScanner.render((decodedText) => {
-                // Saat scan berhasil
                 document.getElementById('inp_barcode').value = decodedText;
                 showToast("Barcode Terisi!");
                 if (window.navigator.vibrate) window.navigator.vibrate(200);
-                
-                // Opsional: Matikan kamera otomatis setelah dapat data (biar hemat baterai)
-                // document.getElementById('chk-camera').click(); 
+            }, (error) => {
+                // Abaikan error scanning frame kosong
             });
         }
     } else {
-        // Mode Kamera OFF (Manual)
         document.getElementById('input-camera-wrapper').style.display = 'none';
         barcodeInput.readOnly = false;
         barcodeInput.placeholder = "Ketik Barcode Manual...";
-        barcodeInput.focus();
         
-        // Matikan scanner kecil biar hemat baterai
         if (miniScanner) {
-            miniScanner.clear();
-            miniScanner = null;
+            miniScanner.clear().then(() => { miniScanner = null; }).catch(()=>{ miniScanner = null; });
         }
     }
 }
