@@ -2,7 +2,7 @@
 // KONFIGURASI BACKEND
 // ============================================================================
 // Ganti URL di bawah ini setiap kali Anda melakukan Deploy Baru (New Version)
-const API_URL = "https://script.google.com/macros/s/AKfycbwesE4wgjaycp8auj_FrtrjhPwfXZIWPImEbbomCEXUWyaDcc37_kUxjVQ2pURFnP-MeQ/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbx5ognmqHeyNo2iQzbytd9aHaYqM_OZtUpKIADokClPrJqUsVZqvse5Dxr4blfI_gyz/exec"; 
 
 // ============================================================================
 // GLOBAL VARIABLES
@@ -130,23 +130,13 @@ function initMainScanner() {
 
 function onScanSuccess(decodedText) {
     if (window.navigator.vibrate) window.navigator.vibrate(200);
-
-    // --- LOGIKA BARU SCAN SPAREPART ---
-    if (currentMode === 'scan') {
-        html5QrcodeScanner.pause(); // Pause kamera
-        
-        // Ambil Jenis Transaksi dari Radio Button
-        const mode = document.querySelector('input[name="tx_mode"]:checked').value;
-        
-        // Buka Popup Qty
-        showQtyModal(decodedText, mode);
-    } 
-    // --- LOGIKA LAMA (UNIT) ---
-    else if (currentMode === 'unit') {
+    
+    // Gunakan popup qty/konfirmasi untuk mode Scan Sparepart DAN Unit
+    if (currentMode === 'scan' || currentMode === 'unit') {
         html5QrcodeScanner.pause();
-        kirimData({ action: 'scan_kendaraan', barcode: decodedText });
-    }
-    // --- LOGIKA MASTER ---
+        const mode = document.querySelector('input[name="tx_mode"]:checked').value;
+        showQtyModal(decodedText, mode); // Munculkan popup untuk konfirmasi status
+    } 
     else if (currentMode === 'master') {
         document.getElementById('inp_barcode').value = decodedText;
         showToast("Barcode Terbaca");
@@ -468,35 +458,33 @@ function showToast(text, persistent=false) {
 function showQtyModal(barcode, mode) {
     const modal = document.getElementById('modal-qty');
     const title = document.getElementById('modal-title');
-    const qtyWrapper = document.getElementById('tx-qty').parentElement.parentElement; // Wrapper input qty
-    
-    // Set UI Title
-    if(mode === 'IN') {
-        title.innerText = currentMode === 'unit' ? "TERIMA UNIT?" : "RESTOCK PART";
-        title.style.color = "#059669"; 
+    const areaUnit = document.getElementById('area-info-unit');
+    const qtyCont = document.getElementById('qty-container');
+    const inputKet = document.getElementById('tx-ket');
+
+    if (currentMode === 'unit') {
+        title.innerText = (mode === 'IN') ? "TERIMA UNIT" : "JUAL UNIT";
+        areaUnit.style.display = "block";
+        qtyCont.style.display = "none"; // Unit tidak pakai Qty +/-
+        document.getElementById('tx-qty').value = 1;
+        inputKet.placeholder = "Masukkan Kondisi Unit...";
+
+        // Cari data tipe & warna di masterData
+        const item = masterData.find(i => i.barcode === barcode);
+        if (item) {
+            document.getElementById('info-tipe').innerText = item.tipe || "-";
+            document.getElementById('info-warna').innerText = item.warna || "-";
+        }
     } else {
-        title.innerText = currentMode === 'unit' ? "JUAL UNIT?" : "PEMAKAIAN PART";
-        title.style.color = "#DC2626"; 
+        title.innerText = (mode === 'IN') ? "RESTOCK PART" : "PEMAKAIAN PART";
+        areaUnit.style.display = "none";
+        qtyCont.style.display = "flex";
+        inputKet.placeholder = "Keterangan...";
     }
 
-    // Set UI Title
-    if(mode === 'IN') {
-        title.innerText = currentMode === 'unit' ? "TERIMA UNIT?" : "RESTOCK PART";
-        title.style.color = "#059669"; 
-    } else {
-        title.innerText = currentMode === 'unit' ? "JUAL UNIT?" : "PEMAKAIAN PART";
-        title.style.color = "#DC2626"; 
-    }
-
-    // Isi Form
     document.getElementById('tx-barcode').value = barcode;
-    document.getElementById('tx-ket').value = "";
-    
-    // Tampilkan
     modal.style.display = 'flex';
-    // Fokus ke keterangan kalau unit, ke qty kalau part
-    if(currentMode === 'unit') document.getElementById('tx-ket').focus();
-    else document.getElementById('tx-qty').focus();
+    inputKet.focus();
 }
 
 function closeModal() {

@@ -146,7 +146,13 @@
         <div id="view-laporan" class="view-section" style="display:none;">
             <div class="card-modern">
                 <div class="card-title">LAPORAN UNIT</div>
-                
+                <div class="card-title">LAPORAN INVENTORY UNIT</div>
+        <button class="btn-block-primary" onclick="downloadExcelUnit()" style="background: #10B981;">
+            📊 UNDUH EXCEL (AUTO-FILTER & SORT)
+        </button>
+        </div>
+</div>
+
                 <div class="date-range-box">
                     <div class="date-field">
                         <label>Dari</label>
@@ -181,27 +187,32 @@
 
     </div> 
     <div id="modal-qty" class="modal-backdrop">
-        <div class="modal-content">
-            <div class="modal-top">
-                <span id="modal-title">KONFIRMASI</span>
-                <button onclick="closeModal()" class="btn-close">&times;</button>
-            </div>
-
-            <div class="modal-center">
-                <input type="text" id="tx-barcode" class="input-readonly-center" readonly>
-                
-                <div class="qty-control">
-                    <button class="btn-circle" onclick="adjustQty(-1)">−</button>
-                    <input type="number" id="tx-qty" value="1">
-                    <button class="btn-circle" onclick="adjustQty(1)">+</button>
-                </div>
-                
-                <input type="text" id="tx-ket" class="input-modern" placeholder="Contoh: Kampas Rem Belakang..." style="text-align:center;">
-            </div>
-
-            <button class="btn-block-primary" onclick="kirimTransaksi()">KIRIM</button>
+    <div class="modal-content">
+        <div class="modal-top">
+            <span id="modal-title">KONFIRMASI</span>
+            <button onclick="closeModal()" class="btn-close">&times;</button>
         </div>
+
+        <div class="modal-center">
+            <input type="text" id="tx-barcode" class="input-readonly-center" readonly style="font-weight: bold; color: var(--primary);">
+            
+            <div id="area-info-unit" style="display:none; background: #f0f0f0; padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: left; font-size: 13px;">
+                <div style="margin-bottom:4px;"><strong>Tipe:</strong> <span id="info-tipe">-</span></div>
+                <div><strong>Warna:</strong> <span id="info-warna">-</span></div>
+            </div>
+
+            <div class="qty-control" id="qty-container">
+                <button class="btn-circle" onclick="adjustQty(-1)">−</button>
+                <input type="number" id="tx-qty" value="1">
+                <button class="btn-circle" onclick="adjustQty(1)">+</button>
+            </div>
+            
+            <input type="text" id="tx-ket" class="input-modern" placeholder="Keterangan..." style="text-align:center;">
+        </div>
+
+        <button class="btn-block-primary" onclick="kirimTransaksi()">KIRIM DATA</button>
     </div>
+</div>
 
     <div id="modal-detail" class="modal-backdrop">
         <div class="modal-content">
