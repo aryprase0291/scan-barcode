@@ -2,7 +2,7 @@
 // KONFIGURASI BACKEND
 // ============================================================================
 // Ganti URL di bawah ini setiap kali Anda melakukan Deploy Baru (New Version)
-const API_URL = "https://script.google.com/macros/s/AKfycbx5ognmqHeyNo2iQzbytd9aHaYqM_OZtUpKIADokClPrJqUsVZqvse5Dxr4blfI_gyz/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbyGg8CAi3Dq616JcIsae_va0FY0QMUELMoDhbCqbLjR9rLuz1gf1uZy0OM-Is6rOdxbFw/exec"; 
 
 // ============================================================================
 // GLOBAL VARIABLES
