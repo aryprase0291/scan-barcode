@@ -114,45 +114,89 @@ body {
 }
 
 .scanner-frame {
-    background: black; 
+    background: #000;
     border-radius: var(--radius-lg);
-    overflow: hidden; 
+    overflow: hidden;
     box-shadow: var(--shadow-hover);
-    margin-bottom: 20px; 
+    margin-bottom: 20px;
     position: relative;
     
-    /* REVISI: Paksa tinggi fix yang lebih rendah */
-    height: 300px; 
+    /* 1. Tentukan tinggi fix yang nyaman di HP (Landscape view) */
+    height: 280px; 
     width: 100%;
     
+    /* 2. Flexbox untuk centering container utama */
     display: flex;
-    align-items: center;     /* Pastikan video di tengah secara vertikal */
-    justify-content: center; /* Pastikan video di tengah secara horizontal */
+    justify-content: center;
+    align-items: center;
 }
 
-/* Pastikan container reader mengisi frame */
-#reader { 
+/* Container bawaan library */
+#reader {
     width: 100% !important;
     height: 100% !important;
     border: none !important;
-    padding: 0 !important; /* Hapus padding bawaan library */
+    padding: 0 !important;
+    
+    /* 3. Flexbox di dalam library untuk mengatur posisi video & tombol */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Pastikan isi vertikal di tengah */
 }
 
-/* KUNCI: Paksa Video Mengisi Area (Cover) tanpa gepeng */
-#reader video { 
+/* VIDEO KAMERA */
+#reader video {
     width: 100% !important;
     height: 100% !important;
-    object-fit: cover !important; /* Video akan di-crop otomatis jika tidak pas, tapi tetap full */
+    object-fit: cover !important; /* Video mengisi penuh area tanpa gepeng */
     border-radius: var(--radius-lg);
+    
+    /* 4. Pastikan video ada di urutan pertama (paling atas/tengah) */
+    order: 1; 
 }
 
-/* Opsional: Sembunyikan elemen dashboard control library jika mengganggu */
+/* CANVAS (Overlay kotak hijau/merah) */
+#reader canvas {
+    /* Pastikan canvas mengikuti ukuran & posisi video */
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+    position: absolute; /* Tumpuk di atas video */
+    top: 0; left: 0;
+    pointer-events: none; /* Agar klik tembus ke bawah */
+    order: 2;
+}
+
+/* DASHBOARD (Tombol Stop/Select Camera) */
 #reader__dashboard_section_csr {
+    /* 5. Pindahkan tombol ke BAWAH agar tidak mendorong video turun */
+    order: 3; 
+    
     position: absolute;
     bottom: 10px;
-    width: 100%;
-    z-index: 10;
-    opacity: 0.8;
+    left: 0; right: 0;
+    z-index: 20;
+    background: transparent !important; /* Hilangkan background putih */
+    padding: 0 20px;
+    text-align: center;
+}
+
+/* Style ulang tombol STOP agar terlihat rapi melayang di bawah */
+#reader__dashboard_section_csr span button {
+    background: rgba(255, 255, 255, 0.8) !important;
+    color: #DC2626 !important;
+    border: none !important;
+    padding: 5px 15px !important;
+    border-radius: 20px !important;
+    font-size: 12px !important;
+    font-weight: bold !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    cursor: pointer;
+}
+
+/* Sembunyikan link "Scan Image File" yang mengganggu */
+#reader__dashboard_section_swaplink {
+    display: none !important;
 }
 
 /* --- INPUT MANUAL --- */
