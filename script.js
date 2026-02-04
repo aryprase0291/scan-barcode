@@ -89,48 +89,43 @@ function initMainScanner() {
     ];
 
     if(!html5QrcodeScanner) {
-        html5QrcodeScanner = new Html5QrcodeScanner(
-            "reader", 
-            { 
-                fps: 30, // Frame per detik tinggi agar mulus
-                
-                // Ukuran Kotak Scan (Proporsional)
-                qrbox: function(viewfinderWidth, viewfinderHeight) {
-            // Kita hitung berdasarkan lebar layar HP saat ini
-            // Agar menyisakan ~10px di kiri dan ~10px di kanan (total -20px)
-            let boxWidth = viewfinderWidth - 25; 
+    html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", 
+        { 
+            fps: 30,
             
-            // Batasi agar tidak error di layar desktop yang sangat lebar
-            // Jika layar desktop > 600px, kita batasi box maksimal 500px saja
-            if (viewfinderWidth > 600) {
-                boxWidth = 500; 
-            }
+            // 1. UPDATE QRBOX (Agar proporsional di layar pendek)
+            qrbox: function(viewfinderWidth, viewfinderHeight) {
+                // Gunakan 80% dari lebar layar
+                let width = Math.floor(viewfinderWidth * 0.8);
+                return {
+                    width: width,
+                    // Tinggi box dibuat tipis (misal 150px - 180px) agar pas
+                    height: 180 
+                };
+            },
+            
+            formatsToSupport: formats, 
+            experimentalFeatures: { useBarCodeDetectorIfSupported: false },
 
-            // Set tinggi box (misal 60% dari lebar, agar agak persegi panjang untuk barcode)
-            // Anda bisa ubah 0.60 jadi 1.0 jika ingin kotak sempurna (persegi)
-            let boxHeight = Math.floor(boxWidth * 0.60); 
+            videoConstraints: {
+                facingMode: "environment",
+                width: { ideal: 1280 }, 
+                height: { ideal: 720 },
+                focusMode: "continuous"
+            },
+            
+            // 2. UPDATE ASPECT RATIO
+            // Ganti 1.0 menjadi 1.777 (Format 16:9 - Landscape)
+            // Ini membuat kamera tidak memaksa bentuk kotak tinggi
+            aspectRatio: 1.777
+        }, 
+        false
+    );
+    html5QrcodeScanner.render(onScanSuccess, ()=>{});
+} 
 
-            return {
-                width: boxWidth,
-                height: boxHeight
-            };
-        },
-                
-                formatsToSupport: formats, 
-        experimentalFeatures: { useBarCodeDetectorIfSupported: false },
-        
-        videoConstraints: {
-            facingMode: "environment",
-            width: { ideal: 1280 }, 
-            height: { ideal: 720 },
-            focusMode: "continuous"
-        },
-        aspectRatio: 1.0
-    }, 
-    false
-);
-        html5QrcodeScanner.render(onScanSuccess, ()=>{});
-    } else {
+else {
         try { html5QrcodeScanner.resume(); } catch(e) {}
     }
 }
