@@ -144,46 +144,42 @@
         </div>
 
         <div id="view-laporan" class="view-section" style="display:none;">
-            <div class="card-modern">
-                <div class="card-title">LAPORAN UNIT</div>
-                <div class="card-title">LAPORAN INVENTORY UNIT</div>
+    
+    <div class="card-modern">
+        <div class="card-title">LAPORAN UNIT & INVENTORY</div>
         <button class="btn-block-primary" onclick="downloadExcelUnit()" style="background: #10B981;">
             📊 UNDUH EXCEL (AUTO-FILTER & SORT)
         </button>
-        </div>
-</div>
+    </div>
 
-                <div class="date-range-box">
-                    <div class="date-field">
-                        <label>Dari</label>
-                        <input type="date" id="date-start" class="input-modern">
-                    </div>
-                    <div class="date-field">
-                        <label>Sampai</label>
-                        <input type="date" id="date-end" class="input-modern">
-                    </div>
-                </div>
-                
-                <button class="btn-block-primary" onclick="tarikLaporan()">TARIK DATA</button>
-                
-                <div id="report-result" style="display:none; margin-top:20px;">
-                    <div class="summary-box">
-                        <div class="summary-label">TOTAL UNIT</div>
-                        <div id="total-unit" class="summary-val">0</div>
-                    </div>
-                    
-                    <table class="table-modern">
-                        <thead>
-                            <tr>
-                                <th>Tipe / Barcode</th>
-                                <th style="text-align:right;">Jml</th>
-                            </tr>
-                        </thead>
-                        <tbody id="report-body"></tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="date-range-box">
+        <div class="date-field">
+            <label>Dari</label>
+            <input type="date" id="date-start" class="input-modern">
         </div>
+        <div class="date-field">
+            <label>Sampai</label>
+            <input type="date" id="date-end" class="input-modern">
+        </div>
+    </div>
+    
+    <button class="btn-block-primary" onclick="tarikLaporan()">TARIK DATA</button>
+    
+    <div id="report-result" style="display:none; margin-top:20px;">
+        <div class="summary-box">
+            <div class="summary-label">TOTAL UNIT</div>
+            <div id="total-unit" class="summary-val">0</div>
+        </div>
+        <table class="table-modern">
+            <thead>
+                <tr>
+                    <th>Tipe / Barcode</th>
+                    <th style="text-align:right;">Jml</th>
+                </tr>
+            </thead>
+            <tbody id="report-body"></tbody>
+        </table>
+    </div>
 
     </div> 
     <div id="modal-qty" class="modal-backdrop">
