@@ -96,32 +96,39 @@ function initMainScanner() {
                 
                 // Ukuran Kotak Scan (Proporsional)
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    let minEdgePercentage = 0.85; 
-                    let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-                    let qrboxWidth = Math.floor(minEdgeSize * minEdgePercentage);
-                    return {
-                        width: qrboxWidth,
-                        height: Math.floor(qrboxWidth * 0.50) // Tinggi 50%
-                    };
-                },
+            // Kita hitung berdasarkan lebar layar HP saat ini
+            // Agar menyisakan ~10px di kiri dan ~10px di kanan (total -20px)
+            let boxWidth = viewfinderWidth - 25; 
+            
+            // Batasi agar tidak error di layar desktop yang sangat lebar
+            // Jika layar desktop > 600px, kita batasi box maksimal 500px saja
+            if (viewfinderWidth > 600) {
+                boxWidth = 500; 
+            }
+
+            // Set tinggi box (misal 60% dari lebar, agar agak persegi panjang untuk barcode)
+            // Anda bisa ubah 0.60 jadi 1.0 jika ingin kotak sempurna (persegi)
+            let boxHeight = Math.floor(boxWidth * 0.60); 
+
+            return {
+                width: boxWidth,
+                height: boxHeight
+            };
+        },
                 
                 formatsToSupport: formats, 
-                
-                // MATIKAN Experimental Features agar lebih stabil di semua HP
-                experimentalFeatures: { useBarCodeDetectorIfSupported: false },
-                
-                // Config Kamera: Prioritaskan FRAME RATE daripada Resolusi Raksasa
-                videoConstraints: {
-                    facingMode: "environment",
-                    // Gunakan HD (1280x720) saja. Ini Sweet Spot (Cepat & Cukup Tajam)
-                    width: { ideal: 1280 }, 
-                    height: { ideal: 720 },
-                    focusMode: "continuous" // Paksa autofocus
-                },
-                aspectRatio: 1.0
-            }, 
-            false
-        );
+        experimentalFeatures: { useBarCodeDetectorIfSupported: false },
+        
+        videoConstraints: {
+            facingMode: "environment",
+            width: { ideal: 1280 }, 
+            height: { ideal: 720 },
+            focusMode: "continuous"
+        },
+        aspectRatio: 1.0
+    }, 
+    false
+);
         html5QrcodeScanner.render(onScanSuccess, ()=>{});
     } else {
         try { html5QrcodeScanner.resume(); } catch(e) {}

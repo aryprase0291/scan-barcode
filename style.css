@@ -114,11 +114,27 @@ body {
 }
 
 .scanner-frame {
-    background: black; border-radius: var(--radius-lg);
-    overflow: hidden; box-shadow: var(--shadow-hover);
-    margin-bottom: 20px; position: relative;
+    background: black; 
+    border-radius: var(--radius-lg);
+    overflow: hidden; 
+    box-shadow: var(--shadow-hover);
+    margin-bottom: 20px; 
+    position: relative;
+    
+    /* Tambahkan ini agar video full mentok pinggir container */
+    padding: 0 !important; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
-#reader, #reader video { border-radius: var(--radius-lg); width: 100% !important; }
+
+/* Pastikan video mengisi penuh area */
+#reader video {
+    width: 100% !important;
+    height: auto !important;
+    border-radius: var(--radius-lg);
+    object-fit: cover;
+}
 
 /* --- INPUT MANUAL --- */
 .manual-input-wrapper {
