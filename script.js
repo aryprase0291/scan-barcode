@@ -619,7 +619,6 @@ function downloadPDF() {
     const doc = new jsPDF({ orientation: "landscape" });
 
     // --- 1. SETTING FONT JUDUL (Header) ---
-    // Paksa gunakan Helvetica agar sama dengan tabel
     doc.setFont("helvetica", "bold"); 
     doc.setFontSize(16);
     doc.text("LAPORAN STOK BARANG", 148, 15, { align: "center" });
@@ -640,9 +639,7 @@ function downloadPDF() {
             style: 'currency', currency: 'USD', minimumFractionDigits: 0 
         }).format(item.harga || 0);
 
-        // --- PEMBERSIHAN TEXT (PENTING) ---
-        // Kadang copy-paste dari web membawa karakter aneh yang merusak font PDF
-        // Kita ganti karakter non-standar menjadi spasi normal
+        // Bersihkan karakter aneh agar font tidak rusak
         let ketClean = (item.keterangan || "-").replace(/[^\x20-\x7E\n]/g, " ");
 
         const rowData = [
@@ -651,7 +648,7 @@ function downloadPDF() {
             item.satuan,
             hargaFmt,
             item.stok || 0,
-            ketClean // Gunakan teks yang sudah dibersihkan
+            ketClean
         ];
         tableRows.push(rowData);
     });
@@ -665,11 +662,11 @@ function downloadPDF() {
         
         // SETTING STYLE UTAMA
         styles: { 
-            font: 'helvetica',      // <--- MAKSA SEMUA ISI TABEL JADI HELVETICA
+            font: 'helvetica',
             fontSize: 9, 
             cellPadding: 4,         
-            overflow: 'linebreak',  // Wrap text panjang
-            textColor: [40, 40, 40] // Hitam Dark Grey (biar tajam)
+            overflow: 'linebreak',
+            textColor: [40, 40, 40]
         },
         
         // Style Header Tabel (Merah)
@@ -678,20 +675,24 @@ function downloadPDF() {
             textColor: [255, 255, 255],
             fontStyle: 'bold',
             halign: 'center',
-            font: 'helvetica' // Pastikan header juga Helvetica
+            font: 'helvetica'
         },
 
-        // Style Kolom Spesifik
+        // --- UPDATE PENTING DISINI ---
         columnStyles: {
             0: { cellWidth: 35 }, // Barcode
             1: { cellWidth: 60 }, // Nama Barang
             2: { cellWidth: 20, halign: 'center' }, // Satuan
-            3: { cellWidth: 25, halign: 'right' },  // Harga
+            
+            // REVISI 1: Harga dibuat Rata Kiri ('left')
+            3: { cellWidth: 25, halign: 'left' },  
+            
             4: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }, // Stok
-            5: { cellWidth: 'auto' } // Keterangan (Sisa ruang)
+            
+            // REVISI 2: Keterangan dibuat Rata Kiri-Kanan ('justify')
+            5: { cellWidth: 'auto', halign: 'justify' } 
         },
 
-        // Margin
         margin: { top: 30, left: 10, right: 10 },
         tableWidth: 'auto'
     });
