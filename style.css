@@ -121,19 +121,38 @@ body {
     margin-bottom: 20px; 
     position: relative;
     
-    /* Tambahkan ini agar video full mentok pinggir container */
-    padding: 0 !important; 
+    /* REVISI: Paksa tinggi fix yang lebih rendah */
+    height: 300px; 
+    width: 100%;
+    
     display: flex;
-    justify-content: center;
-    align-items: center;
+    align-items: center;     /* Pastikan video di tengah secara vertikal */
+    justify-content: center; /* Pastikan video di tengah secara horizontal */
 }
 
-/* Pastikan video mengisi penuh area */
-#reader video {
+/* Pastikan container reader mengisi frame */
+#reader { 
     width: 100% !important;
-    height: auto !important;
+    height: 100% !important;
+    border: none !important;
+    padding: 0 !important; /* Hapus padding bawaan library */
+}
+
+/* KUNCI: Paksa Video Mengisi Area (Cover) tanpa gepeng */
+#reader video { 
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important; /* Video akan di-crop otomatis jika tidak pas, tapi tetap full */
     border-radius: var(--radius-lg);
-    object-fit: cover;
+}
+
+/* Opsional: Sembunyikan elemen dashboard control library jika mengganggu */
+#reader__dashboard_section_csr {
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+    z-index: 10;
+    opacity: 0.8;
 }
 
 /* --- INPUT MANUAL --- */
