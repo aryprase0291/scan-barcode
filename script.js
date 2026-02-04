@@ -444,12 +444,24 @@ function renderList(data) {
     });
 }
 
+// ============================================================================
+// PERBAIKAN 1: FUNGSI PENCARIAN (FIX CASE SENSITIVE)
+// ============================================================================
 function filterList() {
-    const key = document.getElementById('search-input').value.toLowerCase();
-    const filtered = masterData.filter(i => 
-        String(i.nama).toLowerCase().includes(key) || 
-        String(i.barcode).includes(key)
-    );
+    const searchInput = document.getElementById('search-input').value;
+    
+    // Konversi input pencarian ke huruf kecil agar pencarian tidak peduli besar/kecil
+    const key = searchInput.toLowerCase();
+
+    const filtered = masterData.filter(i => {
+        // Ambil data nama & barcode, pastikan string, lalu kecilkan hurufnya
+        const nama = String(i.nama).toLowerCase();
+        const barcode = String(i.barcode).toLowerCase(); // <--- INI KUNCI PERBAIKANNYA
+
+        // Cek apakah input ada di nama ATAU barcode
+        return nama.includes(key) || barcode.includes(key);
+    });
+
     renderList(filtered);
 }
 
@@ -555,7 +567,7 @@ function prosesManual() {
 }
 
 // ============================================================================
-// MODUL EXPORT DATA (EXCEL & PDF)
+// MODUL EXPORT DATA (REVISI FORMAT TEKS & WRAPPING)
 // ============================================================================
 
 function downloadExcel() {
@@ -564,29 +576,35 @@ function downloadExcel() {
         return;
     }
 
-    // 1. Format Data agar Rapi di Excel
+    // 1. Format Data
     const dataExport = masterData.map(item => ({
         "Barcode": item.barcode,
         "Nama Barang": item.nama,
         "Satuan": item.satuan,
-        "Harga Jual": item.harga, // Biarkan angka agar bisa dijumlah
-        "Stok Saat Ini": item.stok || 0,
-        "Keterangan": item.keterangan
+        "Harga Jual": item.harga,
+        "Stok": item.stok || 0,
+        "Keterangan": item.keterangan || "-" // Pastikan tidak kosong
     }));
 
-    // 2. Buat Worksheet & Workbook
+    // 2. Buat Worksheet
     const ws = XLSX.utils.json_to_sheet(dataExport);
-    
-    // Auto-width kolom (biar gak sempit)
+
+    // 3. ATUR LEBAR KOLOM (Agar Teks Keterangan Muat)
+    // wch = width character count
     const wscols = [
-        {wch: 15}, {wch: 30}, {wch: 10}, {wch: 15}, {wch: 10}, {wch: 25}
+        {wch: 15}, // Barcode
+        {wch: 35}, // Nama Barang
+        {wch: 10}, // Satuan
+        {wch: 15}, // Harga
+        {wch: 10}, // Stok
+        {wch: 50}  // Keterangan (Dibuat lebar agar rapi di Excel)
     ];
     ws['!cols'] = wscols;
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Stok Gudang");
 
-    // 3. Download File
+    // 4. Download
     const tanggal = new Date().toISOString().slice(0,10);
     XLSX.writeFile(wb, `Laporan_Stok_${tanggal}.xlsx`);
 }
@@ -598,22 +616,23 @@ function downloadPDF() {
     }
 
     const { jsPDF } = window.jspdf;
-    
-    // 1. KOREKSI: Set Orientation ke 'landscape' (Mendatar)
-    const doc = new jsPDF({ orientation: "landscape" }); 
+    const doc = new jsPDF({ orientation: "landscape" });
 
-    // 2. Judul Laporan (Center di Landscape A4: Lebar 297mm / 2 = ~148.5)
+    // --- 1. SETTING FONT JUDUL (Header) ---
+    // Paksa gunakan Helvetica agar sama dengan tabel
+    doc.setFont("helvetica", "bold"); 
+    doc.setFontSize(16);
+    doc.text("LAPORAN STOK BARANG", 148, 15, { align: "center" });
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
     const tanggal = new Date().toLocaleDateString('id-ID', { 
         day: 'numeric', month: 'long', year: 'numeric' 
     });
-    
-    doc.setFontSize(16);
-    doc.text("LAPORAN STOK BARANG", 148, 15, { align: "center" });
-    doc.setFontSize(10);
     doc.text(`Per Tanggal: ${tanggal}`, 148, 22, { align: "center" });
 
-    // 3. Siapkan Data Tabel
-    const tableColumn = ["Barcode", "Nama Barang", "Satuan", "Harga ($)", "Stok", "Keterangan"];
+    // Siapkan Data Tabel
+    const tableColumn = ["Barcode", "Nama Barang", "Satuan", "Harga", "Stok", "Keterangan"];
     const tableRows = [];
 
     masterData.forEach(item => {
@@ -621,41 +640,63 @@ function downloadPDF() {
             style: 'currency', currency: 'USD', minimumFractionDigits: 0 
         }).format(item.harga || 0);
 
+        // --- PEMBERSIHAN TEXT (PENTING) ---
+        // Kadang copy-paste dari web membawa karakter aneh yang merusak font PDF
+        // Kita ganti karakter non-standar menjadi spasi normal
+        let ketClean = (item.keterangan || "-").replace(/[^\x20-\x7E\n]/g, " ");
+
         const rowData = [
             item.barcode,
             item.nama,
             item.satuan,
             hargaFmt,
             item.stok || 0,
-            item.keterangan || "-"
+            ketClean // Gunakan teks yang sudah dibersihkan
         ];
         tableRows.push(rowData);
     });
 
-    // 4. Generate Tabel (AutoTable) dengan Layout Fixed Landscape
+    // --- 2. GENERATE TABEL ---
     doc.autoTable({
         head: [tableColumn],
         body: tableRows,
         startY: 30,
         theme: 'grid',
-        styles: { fontSize: 9, cellPadding: 3 }, // Font sedikit diperbesar
-        headStyles: { fillColor: [204, 0, 0], halign: 'center' }, // Header Merah
         
-        // KOREKSI: Setting Margin & Lebar agar Full Kertas
-        margin: { top: 30, left: 10, right: 10 }, // Margin kiri kanan tipis agar muat banyak
-        tableWidth: 'auto', // Otomatis memenuhi margin (Fixed width relative to page)
+        // SETTING STYLE UTAMA
+        styles: { 
+            font: 'helvetica',      // <--- MAKSA SEMUA ISI TABEL JADI HELVETICA
+            fontSize: 9, 
+            cellPadding: 4,         
+            overflow: 'linebreak',  // Wrap text panjang
+            textColor: [40, 40, 40] // Hitam Dark Grey (biar tajam)
+        },
         
+        // Style Header Tabel (Merah)
+        headStyles: { 
+            fillColor: [220, 38, 38], 
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            halign: 'center',
+            font: 'helvetica' // Pastikan header juga Helvetica
+        },
+
+        // Style Kolom Spesifik
         columnStyles: {
             0: { cellWidth: 35 }, // Barcode
-            1: { cellWidth: 60 }, // Nama Barang (Diberi porsi lebar)
+            1: { cellWidth: 60 }, // Nama Barang
             2: { cellWidth: 20, halign: 'center' }, // Satuan
-            3: { cellWidth: 25, halign: 'right' }, // Harga
+            3: { cellWidth: 25, halign: 'right' },  // Harga
             4: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }, // Stok
-            5: { cellWidth: 'auto' } // Keterangan (Memakai sisa ruang yang ada / Fill)
-        }
+            5: { cellWidth: 'auto' } // Keterangan (Sisa ruang)
+        },
+
+        // Margin
+        margin: { top: 30, left: 10, right: 10 },
+        tableWidth: 'auto'
     });
 
-    doc.save(`Laporan_Stok_${tanggal}.pdf`);
+    doc.save(`Laporan_Stok_${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
 // ============================================================================
@@ -773,9 +814,14 @@ async function downloadMutasi(format) {
 // MODUL VIEW DETAIL
 // ============================================================================
 function viewItem(barcode) {
-    // Cari data berdasarkan barcode
-    const item = masterData.find(i => i.barcode === barcode);
-    if(!item) return;
+    // REVISI: Gunakan String() agar Angka & Teks dianggap cocok
+    // Mengubah kedua sisi menjadi String sebelum membandingkan
+    const item = masterData.find(i => String(i.barcode) === String(barcode));
+    
+    if(!item) {
+        console.log("Item tidak ditemukan:", barcode); // Debugging
+        return;
+    }
 
     // Isi Data ke Modal
     document.getElementById('det-barcode').innerText = item.barcode;
@@ -791,7 +837,7 @@ function viewItem(barcode) {
     let stok = item.stok || 0;
     document.getElementById('det-stok').innerText = stok + ' ' + item.satuan;
     
-    // Keterangan (Default strip jika kosong)
+    // Keterangan
     document.getElementById('det-ket').innerText = item.keterangan || "-";
 
     // Tampilkan Modal
