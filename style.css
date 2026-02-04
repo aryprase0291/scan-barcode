@@ -462,99 +462,98 @@ input:checked + .slider:before { transform: translateX(20px); }
 }
 .btn-view { background: #EEF2FF; color: #4F46E5; }
 .btn-view:active { transform: scale(0.9); background: #E0E7FF; }
-
-
-/* ========================================= */
-/* REVISI LAYOUT SCANNER (FIXED & PRESISI)  */
+/* REVISI MINI SCANNER (INPUT MENU) - WIDE   */
 /* ========================================= */
 
-/* 1. Wrapper Utama Scanner */
 .mini-scanner-box {
     position: relative;
-    background: #000; /* Background hitam agar menyatu dengan video */
-    border-radius: 12px;
-    overflow: hidden; /* Penting: agar isi tidak luber keluar rounded corner */
+    background: #000;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
     margin-bottom: 15px;
-    display: flex;
-    flex-direction: column; /* Susun elemen ke bawah */
-}
 
-/* 2. Container Library (Reader) */
-#reader-mini {
+    /* 1. Tentukan Tinggi Fix (Sedikit lebih kecil dari scanner utama) */
+    height: 250px; 
     width: 100%;
-    border: none !important;
+
+    /* 2. Flexbox Centering (Agar Video Pas di Tengah) */
     display: flex;
-    flex-direction: column; /* Paksa susunan vertikal */
+    justify-content: center;
+    align-items: center;
 }
 
-/* 3. PAKSA POSISI VIDEO DI PALING ATAS */
-#reader-mini > div:first-child {
-    /* Biasanya ini adalah div wrapper video dari library */
-    order: 1 !important;
+#reader-mini {
     width: 100% !important;
-}
-#reader-mini video {
-    width: 100% !important;
-    object-fit: cover; /* Video memenuhi area tanpa gepeng */
-    border-radius: 0 !important; /* Biar nyatu sama box */
-    display: block; /* Hilangkan gap bawah video */
-}
-
-/* 4. TOMBOL MENU SCANNER (Stop / Scan Image) -> PINDAH KE BAWAH */
-#reader-mini__dashboard_section_csr {
-    order: 2 !important; /* Taruh di urutan ke-2 (Bawah Video) */
-    background: #fff; /* Area tombol putih */
-    padding: 10px;
-    border-top: 1px solid #eee;
-    text-align: center;
+    height: 100% !important;
+    border: none !important;
+    padding: 0 !important;
+    
+    /* Flex Column untuk menata video & tombol */
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    justify-content: center;
 }
 
-/* Style Tombol STOP Bawaan Library */
-#reader-mini__dashboard_section_csr span button {
-    background-color: #FEF2F2 !important;
-    color: #DC2626 !important;
-    border: 1px solid #FECACA !important;
-    padding: 8px 20px !important;
-    border-radius: 50px !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    text-transform: uppercase;
-    cursor: pointer;
-    width: 100%; /* Full width agar rapi */
+/* VIDEO KAMERA */
+#reader-mini video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important; /* Full fill tanpa gepeng */
+    border-radius: var(--radius-lg);
+    order: 1; /* Video Paling Atas */
 }
 
-/* Style Link "Scan an Image File" */
-#reader-mini__dashboard_section_swaplink {
-    order: 3 !important; /* Paling Bawah */
-    background: #fff;
-    padding-bottom: 10px;
+/* CANVAS (Overlay bawaan library) */
+#reader-mini canvas {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+    position: absolute;
+    top: 0; left: 0;
+    pointer-events: none;
+    order: 2;
+}
+
+/* TOMBOL STOP (Dashboard) - Pindah ke Bawah */
+#reader-mini__dashboard_section_csr {
+    order: 3;
+    position: absolute;
+    bottom: 10px;
+    left: 0; right: 0;
+    z-index: 20;
+    background: transparent !important;
+    padding: 0 20px;
     text-align: center;
 }
-#reader-mini__dashboard_section_swaplink a {
-    color: #6B7280 !important;
-    font-size: 12px !important;
-    text-decoration: none;
-    border-bottom: 1px dashed #ccc;
+
+/* Styling Tombol Stop Mini */
+#reader-mini__dashboard_section_csr span button {
+    background: rgba(255, 255, 255, 0.8) !important;
+    color: #DC2626 !important;
+    border: none !important;
+    padding: 4px 12px !important;
+    border-radius: 20px !important;
+    font-size: 11px !important;
+    font-weight: bold !important;
+    cursor: pointer;
 }
 
-/* 5. FRAME GARIS PUTIH (REVISI POSISI) */
-/* Kita posisikan absolute relative terhadap .mini-scanner-box */
+/* Hapus link text */
+#reader-mini__dashboard_section_swaplink { display: none !important; }
+
+/* FRAME GARIS PUTIH (Visual Guide) - Update Posisi */
 .scan-frame-custom {
     position: absolute;
-    /* Posisikan frame agak ke atas, menumpang di area VIDEO saja */
-    top: 35%; 
-    left: 50%;
+    /* Posisikan persis di tengah */
+    top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     
-    width: 70%;  /* Lebar frame */
-    height: 160px; /* Tinggi frame fix agar tidak gepeng */
+    width: 70%;
+    height: 140px; /* Sesuaikan dengan tinggi area scan JS */
     z-index: 10;
-    pointer-events: none; /* Agar tembus klik */
+    pointer-events: none;
     
-    /* Gambar Siku Putih (CSS Gradient) */
+    /* Gambar Siku Putih */
     background: 
         linear-gradient(to right, #fff 4px, transparent 4px) 0 0,
         linear-gradient(to bottom, #fff 4px, transparent 4px) 0 0,
@@ -564,14 +563,12 @@ input:checked + .slider:before { transform: translateX(20px); }
         linear-gradient(to top, #fff 4px, transparent 4px) 0 100%,
         linear-gradient(to left, #fff 4px, transparent 4px) 100% 100%,
         linear-gradient(to top, #fff 4px, transparent 4px) 100% 100%;
-    
     background-repeat: no-repeat;
-    background-size: 40px 40px; /* Panjang kaki siku */
+    background-size: 30px 30px;
     
-    /* Shadow Gelap di Luar Frame (Fokus Effect) */
-    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5); 
+    /* Shadow Gelap Fokus */
+    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5);
 }
-
 /* Teks Hint di Bawah Frame (Sembunyikan karena sudah ada di input) */
 .mini-scanner-hint {
     display: none; 

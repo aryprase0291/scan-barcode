@@ -274,21 +274,27 @@ function toggleCameraInput() {
                 "reader-mini", 
                 { 
                     fps: 30, 
-                    // Visual Kotak Scan (Logic Only)
+                    
+                    // 1. UPDATE QRBOX
+                    // Agar sesuai dengan frame tinggi 250px
                     qrbox: function(viewfinderWidth, viewfinderHeight) {
-                        let width = Math.floor(viewfinderWidth * 0.8);
-                        return { width: width, height: Math.floor(width * 0.45) };
+                        let width = Math.floor(viewfinderWidth * 0.7);
+                        // Tinggi fix 140px (Sesuai CSS .scan-frame-custom)
+                        return { width: width, height: 140 }; 
                     },
+            
                     formatsToSupport: formats,
                     experimentalFeatures: { useBarCodeDetectorIfSupported: true },
                     
-                    // Resolusi Tinggi (Full HD) untuk ketajaman baca
                     videoConstraints: {
                         facingMode: "environment",
-                        width: { min: 1280, ideal: 1920 }, 
-                        height: { min: 720, ideal: 1080 },
+                        width: { ideal: 1280 }, 
+                        height: { ideal: 720 },
                         focusMode: "continuous"
-                    }
+                    },
+                    
+                    // 2. TAMBAHKAN ASPECT RATIO (Landscape)
+                    aspectRatio: 1.777 
                 }, 
                 false
             );
